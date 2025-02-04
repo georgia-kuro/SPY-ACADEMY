@@ -5,132 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SPY×ACADEMY</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400&display=swap" rel="stylesheet">
-    <style>
-        body {
-            background-color: #000;
-            color: #fff;
-            font-family: 'Noto Sans JP', 'Helvetica Neue', Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 10px;
-            position: relative;
-            box-sizing: border-box;
-        }
-
-        .logo {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            opacity: 0.3;
-            width: 120px;
-            height: auto;
-        }
-
-        .title {
-            font-size: min(64px, 12vw);
-            font-weight: 900;
-            letter-spacing: 0;
-            margin-bottom: 60px;
-            font-family: 'Impact', sans-serif;
-            text-transform: uppercase;
-            position: relative;
-            color: #000;
-            -webkit-text-stroke: 1.5px #fff;
-            opacity: 0;
-            filter: blur(10px);
-            transition: all 2s ease;
-        }
-
-        .title.visible {
-            opacity: 1;
-            filter: blur(0);
-        }
-
-        .title.moved {
-            margin: 20px 0 40px;
-            transform: translateY(-20vh);
-        }
-
-        .title span {
-            color: #666;
-            font-family: 'Impact', sans-serif;
-            font-weight: 900;
-            font-size: 1em;
-            margin: 0 0.05em;
-            -webkit-text-stroke: 0;
-        }
-
-        .title::after {
-            display: none;
-        }
-
-        .message {
-            margin: 12px 0;
-            min-height: 1em;
-            font-size: min(18px, 4.5vw);
-            font-weight: 300;
-            letter-spacing: 0.05em;
-            line-height: 1.6;
-        }
-
-        #message3 {
-            margin-bottom: 50px;
-        }
-
-        .button {
-            display: none;
-            margin-top: 10px;
-            padding: 12px 32px;
-            background-color: transparent;
-            color: #fff;
-            border: 1px solid rgba(255, 255, 255, 0.6);
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 300;
-            letter-spacing: 0.1em;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(5px);
-            -webkit-backdrop-filter: blur(5px);
-        }
-
-        .button:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-            border-color: #fff;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-        }
-
-        .password-input {
-            display: none;
-            margin-top: 30px;
-            padding: 10px 15px;
-            background: transparent;
-            border: 1px solid rgba(255, 255, 255, 0.6);
-            border-radius: 4px;
-            color: #fff;
-            font-size: 16px;
-            width: 200px;
-            text-align: center;
-        }
-
-        .password-input::placeholder {
-            color: rgba(255, 255, 255, 0.5);
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <img src="logo.png" alt="ICT PARK" class="logo">
     <h1 class="title"></h1>
-    <div id="message1" class="message"></div>
-    <div id="message2" class="message"></div>
-    <div id="message3" class="message"></div>
-    <button id="startButton" class="button">ステージ1へ</button>
+    <div id="initialScreen">
+        <div class="initial-message">
+            <span class="shake-text">パ</span>スワードを入力してください。
+        </div>
+        <div class="input-group">
+            <input type="text" id="initialInput" placeholder="パスワードを入力">
+            <button id="submitButton">確認</button>
+        </div>
+    </div>
+    <div id="mainScreen" style="display: none;">
+        <div id="message1" class="message"></div>
+        <div id="message2" class="message"></div>
+        <div id="message3" class="message"></div>
+        <button id="startButton" class="button">ステージ1へ</button>
+    </div>
 
     <script>
         const messages = [
@@ -139,7 +33,14 @@
             'Ready?'
         ];
 
-        const stage1Message = 'この画面のどこかに一つ目のパスワードが隠されている。よーく観察して、パスワードを見つけ出せ！';
+        const stage1Message = 'この画面のどこかに一つ目のパスワードが隠されている。\nよーく観察して、パスワードを見つけ出せ！';
+        
+        const stage2Message = [
+            'ステージ1クリア！',
+            'インターネットは、世界中のコンピュータをつなぐ巨大なネットワーク。',
+            'まるで世界中に張り巡らされた道路のように、\n情報が行き交っているんだ。',
+            'でも、その道筋はどうやって決まるんだろう？'
+        ];
 
         function typeWriter(text, element, callback) {
             element.style.opacity = "1";
@@ -148,7 +49,11 @@
 
             function type() {
                 if (i < text.length) {
-                    element.innerHTML += text.charAt(i);
+                    if (text.charAt(i) === '\n') {
+                        element.innerHTML += '<br>';
+                    } else {
+                        element.innerHTML += text.charAt(i);
+                    }
                     i++;
                     setTimeout(type, speed);
                 } else if (callback) {
@@ -164,22 +69,37 @@
             const message2 = document.getElementById('message2');
             const message3 = document.getElementById('message3');
             const startButton = document.getElementById('startButton');
+            const initialScreen = document.getElementById('initialScreen');
+            const mainScreen = document.getElementById('mainScreen');
+            const shakeText = document.querySelector('.shake-text');
 
             titleElement.innerHTML = 'SPY<span>×</span>ACADEMY';
+            
+            setInterval(() => {
+                shakeText.classList.add('shaking');
+                setTimeout(() => {
+                    shakeText.classList.remove('shaking');
+                }, 500);
+            }, 3000);
 
-            setTimeout(() => {
-                titleElement.classList.add('visible');
+            shakeText.addEventListener('click', () => {
+                initialScreen.style.display = 'none';
+                mainScreen.style.display = 'block';
                 
                 setTimeout(() => {
-                    typeWriter(messages[0], message1, () => {
-                        typeWriter(messages[1], message2, () => {
-                            typeWriter(messages[2], message3, () => {
-                                startButton.style.display = 'block';
+                    titleElement.classList.add('visible');
+                    
+                    setTimeout(() => {
+                        typeWriter(messages[0], message1, () => {
+                            typeWriter(messages[1], message2, () => {
+                                typeWriter(messages[2], message3, () => {
+                                    startButton.style.display = 'block';
+                                });
                             });
                         });
-                    });
-                }, 3000);
-            }, 1500);
+                    }, 3000);
+                }, 1500);
+            });
 
             startButton.addEventListener('click', () => {
                 message1.style.display = 'none';
@@ -190,18 +110,94 @@
                 titleElement.classList.add('moved');
 
                 setTimeout(() => {
+                    // ランダムな位置を計算
+                    const getRandomPosition = () => {
+                        // 画面の有効範囲を取得（上部20%から下部90%まで）
+                        const maxWidth = window.innerWidth - 100; // 右端の余白
+                        const minHeight = window.innerHeight * 0.2; // 上部20%から
+                        const maxHeight = window.innerHeight * 0.9; // 下部90%まで
+
+                        return {
+                            left: Math.random() * maxWidth,
+                            top: minHeight + (Math.random() * (maxHeight - minHeight))
+                        };
+                    };
+
+                    // 隠しパスワードを追加
+                    const hiddenPassword = document.createElement('div');
+                    hiddenPassword.className = 'hidden-password';
+                    hiddenPassword.textContent = 'ABC';
+                    const position = getRandomPosition();
+                    hiddenPassword.style.left = `${position.left}px`;
+                    hiddenPassword.style.top = `${position.top}px`;
+                    document.body.appendChild(hiddenPassword);
+
                     message1.style.display = 'block';
                     message1.innerHTML = '';
                     typeWriter(stage1Message, message1, () => {
+                        const inputGroup = document.createElement('div');
+                        inputGroup.className = 'input-group';
+
                         const passwordInput = document.createElement('input');
                         passwordInput.type = 'text';
                         passwordInput.className = 'password-input';
                         passwordInput.placeholder = 'パスワードを入力';
-                        document.body.appendChild(passwordInput);
-                        passwordInput.style.display = 'block';
+
+                        const submitButton = document.createElement('button');
+                        submitButton.className = 'submit-button';
+                        submitButton.textContent = '確認';
+
+                        // パスワード確認のイベントリスナーを追加
+                        submitButton.addEventListener('click', () => {
+                            if (verifyPassword(passwordInput.value)) {
+                                showStage2();
+                            } else {
+                                passwordInput.value = '';
+                                passwordInput.placeholder = '不正解...もう一度試してみよう';
+                                setTimeout(() => {
+                                    passwordInput.placeholder = 'パスワードを入力';
+                                }, 2000);
+                            }
+                        });
+
+                        // Enterキーでも送信できるように
+                        passwordInput.addEventListener('keypress', (e) => {
+                            if (e.key === 'Enter') {
+                                submitButton.click();
+                            }
+                        });
+
+                        inputGroup.appendChild(passwordInput);
+                        inputGroup.appendChild(submitButton);
+                        message1.parentNode.appendChild(inputGroup);
                     });
                 }, 2000);
             });
+        }
+
+        function showStage2() {
+            const messages = document.querySelectorAll('.message');
+            messages.forEach(msg => msg.innerHTML = '');
+            
+            const inputGroup = document.querySelector('.input-group');
+            if (inputGroup) inputGroup.remove();
+            
+            const hiddenPassword = document.querySelector('.hidden-password');
+            if (hiddenPassword) hiddenPassword.remove();
+
+            // メッセージを順番に表示
+            typeWriter(stage2Message[0], message1, () => {
+                typeWriter(stage2Message[1], message2, () => {
+                    typeWriter(stage2Message[2], message3, () => {
+                        // ここに次のステージへの遷移ボタンや入力フォームを追加
+                    });
+                });
+            });
+        }
+
+        // パスワード検証関数
+        function verifyPassword(input) {
+            return input.trim().toUpperCase() === 'ABC';
         }
     </script>
 </body>
