@@ -158,7 +158,7 @@
                 // message2: ネットワークの説明
                 typeWriter(stage2Message[1], message2, () => {
                     // message3: 道路の比喩
-                    message3.classList.remove('keyword-message'); // 既存のクラスを削除
+                    message3.classList.remove('keyword-message');
                     typeWriter(stage2Message[2], message3, () => {
                         // message3に改行を追加
                         message3.innerHTML += '<br><br>';
@@ -167,7 +167,20 @@
                         keywordSpan.classList.add('keyword-message');
                         message3.appendChild(keywordSpan);
                         // キーワードメッセージを表示
-                        typeWriter(stage2Message[3], keywordSpan);
+                        typeWriter(stage2Message[3], keywordSpan, () => {
+                            // キーワード表示後、3秒待ってからボタンを表示
+                            setTimeout(() => {
+                                const nextButton = document.createElement('button');
+                                nextButton.className = 'button';
+                                nextButton.textContent = 'ステージ2へ';
+                                nextButton.style.display = 'block';
+                                nextButton.style.marginTop = '50px';
+                                nextButton.onclick = () => {
+                                    window.location.href = 'stage2.html';
+                                };
+                                message3.appendChild(nextButton);
+                            }, 3000);
+                        });
                     });
                 });
             });
