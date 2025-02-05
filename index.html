@@ -3,202 +3,650 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SPY×ACADEMY</title>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
+    <title>Flappy Game</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #0f172a;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            position: relative;
+        }
+        
+        #gameCanvas {
+            border: 2px solid rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.2);
+        }
+
+        #score {
+            position: absolute;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #fff;
+            font-size: 24px;
+            font-weight: 200;
+            opacity: 0.5;
+            letter-spacing: 2px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 3;
+            pointer-events: none;
+            text-align: center;
+        }
+
+        #score::before {
+            content: 'SCORE';
+            font-size: 14px;
+            letter-spacing: 4px;
+            opacity: 0.3;
+        }
+
+        .transition {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0f172a;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 1s;
+        }
+
+        .transition.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        #gameOver {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            display: none;
+            z-index: 3;
+            width: calc(100% + 20px);
+        }
+
+        #gameOver h2 {
+            font-size: 48px;
+            font-weight: 200;
+            color: #fff;
+            opacity: 0.8;
+            margin: 0 0 30px 0;
+            letter-spacing: 8px;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+        }
+
+        #restartButton {
+            padding: 15px 40px;
+            font-size: 16px;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 30px;
+            color: rgba(255, 255, 255, 0.8);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            letter-spacing: 4px;
+            font-weight: 200;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+        }
+
+        #restartButton:hover {
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        #setupScreen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            width: 100%;
+            height: 100vh;
+            z-index: 3;
+        }
+
+        #setupScreen h2 {
+            font-size: 24px;
+            font-weight: 200;
+            letter-spacing: 4px;
+            margin-bottom: 40px;
+            opacity: 0.8;
+            color: #fff;
+        }
+
+        .setup-options {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .setup-option {
+            padding: 20px;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            color: rgba(255, 255, 255, 0.8);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 200px;
+            height: 120px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .setup-option:hover {
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .setup-option h3 {
+            font-size: 16px;
+            font-weight: 200;
+            margin: 0 0 15px 0;
+            opacity: 0.5;
+            text-align: center;
+            width: 100%;
+        }
+
+        #timeInput {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #fff;
+            padding: 10px;
+            width: 80%;
+            text-align: center;
+            margin: 0;
+            font-size: 16px;
+            appearance: none;
+            -moz-appearance: textfield;
+        }
+
+        #timeInput::-webkit-outer-spin-button,
+        #timeInput::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        #timeInput:focus {
+            outline: none;
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+        }
+
+        #timeInput::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        #startGameBtn {
+            margin-top: 20px;
+            padding: 15px 40px;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 30px;
+            color: rgba(255, 255, 255, 0.8);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            letter-spacing: 2px;
+            font-weight: 200;
+        }
+
+        #startGameBtn:hover {
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .game-container {
+            display: none;
+            width: 100%;
+            height: 100vh;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .game-container.active {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .canvas-container {
+            position: relative;
+            width: 400px;
+            height: 600px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #gameCanvas {
+            position: absolute;
+            z-index: 1;
+            border-radius: 20px;
+        }
+
+        .overlay {
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            width: calc(100% + 20px);
+            height: calc(100% + 20px);
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(3px);
+            -webkit-backdrop-filter: blur(3px);
+            display: none;
+            z-index: 2;
+            border-radius: 25px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .ready-screen {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 3;
+            display: none;
+        }
+
+        .ready-screen h2 {
+            font-size: 48px;
+            font-weight: 200;
+            color: #fff;
+            opacity: 0.8;
+            margin: 0 0 30px 0;
+            letter-spacing: 8px;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+        }
+
+        .start-button {
+            padding: 15px 40px;
+            font-size: 16px;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 30px;
+            color: rgba(255, 255, 255, 0.8);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            letter-spacing: 4px;
+            font-weight: 200;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+        }
+
+        .start-button:hover {
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+    </style>
 </head>
 <body>
-    <img src="logo.png" alt="ICT PARK" class="logo">
-    <h1 class="title"></h1>
-    <div id="initialScreen">
-        <div class="initial-message">
-            <span class="shake-text">パ</span>スワードを入力してください。
+    <div id="setupScreen">
+        <h2>TRANSITION SETUP</h2>
+        <div class="setup-options">
+            <div class="setup-option" onclick="selectOption('timer')">
+                <h3>TIMER</h3>
+                <input type="number" id="timeInput" placeholder="秒数" min="1">
+            </div>
+            <div class="setup-option" onclick="selectOption('time')">
+                <h3>SPECIFIC TIME</h3>
+                <input type="time" id="timeInput" style="display: none;">
+            </div>
         </div>
-        <div class="input-group">
-            <input type="text" id="initialInput" placeholder="パスワードを入力">
-            <button id="submitButton">確認</button>
-        </div>
+        <button id="startGameBtn">START GAME</button>
     </div>
-    <div id="mainScreen" style="display: none;">
-        <div id="message1" class="message"></div>
-        <div id="message2" class="message"></div>
-        <div id="message3" class="message"></div>
-        <button id="startButton" class="button">ステージ1へ</button>
+
+    <div class="game-container">
+        <div class="canvas-container">
+            <div id="score">0</div>
+            <div class="overlay"></div>
+            <div id="gameOver">
+                <h2>GAME OVER</h2>
+                <button id="restartButton">RESTART</button>
+            </div>
+            <div class="ready-screen">
+                <h2>READY?</h2>
+                <button class="start-button">START</button>
+            </div>
+            <canvas id="gameCanvas"></canvas>
+        </div>
+        <div class="transition"></div>
     </div>
 
     <script>
-        const messages = [
-            'ようこそ、SPY×ACADEMYへ！',
-            '5つのステージをクリアして隠されたメッセージを探せ。',
-            'Ready?'
-        ];
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreElement = document.getElementById('score');
+        const gameOverScreen = document.getElementById('gameOver');
+        const restartButton = document.getElementById('restartButton');
+        const transition = document.querySelector('.transition');
 
-        const stage1Message = 'この画面のどこかに一つ目のパスワードが隠されている。\nよーく観察して、パスワードを見つけ出せ！';
-        
-        const stage2Message = [
-            'ステージ1クリア！',
-            'インターネットは、世界中のコンピュータをつなぐ巨大なネットワーク。',
-            'まるで世界中に張り巡らされた道路のように、\n情報が行き交っているんだ。',
-            'でも、その道筋はどうやって決まるんだろう？'
-        ];
+        // キャラクター画像の読み込み
+        const birdImage = new Image();
+        birdImage.src = 'Character.png';
 
-        function typeWriter(text, element, callback) {
-            element.style.opacity = "1";
-            let i = 0;
-            const speed = 30;
+        canvas.width = 400;
+        canvas.height = 600;
 
-            function type() {
-                if (i < text.length) {
-                    if (text.charAt(i) === '\n') {
-                        element.innerHTML += '<br>';
-                    } else {
-                        element.innerHTML += text.charAt(i);
-                    }
-                    i++;
-                    setTimeout(type, speed);
-                } else if (callback) {
-                    setTimeout(callback, 1000);
+        let score = 0;
+        let gameStartTime = Date.now();
+        let isGameOver = false;
+
+        // 鳥のサイズを調整
+        const bird = {
+            x: canvas.width / 3,
+            y: canvas.height / 2,
+            width: 40,
+            height: 40,
+            velocity: 0,
+            gravity: 0.4,  // 重力を少し弱く
+            jump: -6.5,    // ジャンプ力を調整
+            rotation: 0,
+            maxRotation: 25,  // 最大回転角度
+            minRotation: -25, // 最小回転角度
+            rotationSpeed: 3  // 回転速度
+        };
+
+        // パイプ
+        const pipes = [];
+        const pipeWidth = 60;
+        const pipeGap = 160;
+        const pipeSpeed = 2;
+
+        function createPipe() {
+            const minHeight = 100;
+            const maxHeight = canvas.height - pipeGap - minHeight;
+            const height = Math.random() * (maxHeight - minHeight) + minHeight;
+
+            pipes.push({
+                x: canvas.width,
+                height: height,
+                passed: false
+            });
+        }
+
+        function resetGame() {
+            score = 0;
+            gameStartTime = Date.now();
+            isGameOver = false;
+            bird.y = canvas.height / 2;
+            bird.velocity = 0;
+            bird.rotation = 0;
+            pipes.length = 0;
+            createPipe();
+            gameOverScreen.style.display = 'none';
+            document.querySelector('.overlay').style.display = 'none';
+            scoreElement.textContent = '0';
+        }
+
+        // 最初のパイプを生成
+        createPipe();
+
+        // キー入力の設定
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && !isGameOver) {
+                bird.velocity = bird.jump;
+                bird.rotation = bird.minRotation;  // ジャンプ時の角度
+            }
+        });
+
+        // タッチ入力の設定
+        document.addEventListener('touchstart', (e) => {
+            if (!isGameOver) {
+                e.preventDefault();
+                bird.velocity = bird.jump;
+                bird.rotation = bird.minRotation;  // ジャンプ時の角度
+            }
+        });
+
+        restartButton.addEventListener('click', resetGame);
+
+        // 鳥の回転角度を計算する関数
+        function calculateRotation() {
+            if (bird.velocity < 0) {
+                // 上昇中は最小角度（上向き）
+                return bird.minRotation;
+            } else {
+                // 下降中は速度に応じて角度を変える
+                const rotationRate = Math.min(bird.velocity / 10, 1);
+                return bird.minRotation + (bird.maxRotation - bird.minRotation) * rotationRate;
+            }
+        }
+
+        // 鳥の描画関数を修正
+        function drawBird() {
+            ctx.save();
+            ctx.translate(bird.x, bird.y);
+            
+            // 現在の回転角度を計算
+            bird.rotation = calculateRotation();
+            ctx.rotate(bird.rotation * Math.PI / 180);
+            
+            const offsetX = bird.width / 2;
+            const offsetY = bird.height / 2;
+            
+            ctx.drawImage(
+                birdImage,
+                -offsetX,
+                -offsetY,
+                bird.width,
+                bird.height
+            );
+            
+            ctx.restore();
+        }
+
+        // パイプの描画
+        function drawPipes() {
+            pipes.forEach(pipe => {
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
+                
+                // 上のパイプ
+                ctx.fillRect(pipe.x, 0, pipeWidth, pipe.height);
+                
+                // 下のパイプ
+                ctx.fillRect(pipe.x, pipe.height + pipeGap, pipeWidth, 
+                    canvas.height - (pipe.height + pipeGap));
+                
+                // パイプの縁
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(pipe.x, 0, pipeWidth, pipe.height);
+                ctx.strokeRect(pipe.x, pipe.height + pipeGap, pipeWidth,
+                    canvas.height - (pipe.height + pipeGap));
+            });
+        }
+
+        // 背景の描画
+        function drawBackground() {
+            // グラデーションの光の粒子
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+            for(let i = 0; i < 20; i++) {
+                const size = Math.random() * 3;
+                const x = Math.random() * canvas.width;
+                const y = Math.random() * canvas.height;
+                
+                ctx.beginPath();
+                ctx.arc(x, y, size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // 衝突判定
+        function checkCollision(pipe) {
+            if (bird.x + bird.width/2 > pipe.x && 
+                bird.x - bird.width/2 < pipe.x + pipeWidth) {
+                if (bird.y - bird.width/2 < pipe.height || 
+                    bird.y + bird.width/2 > pipe.height + pipeGap) {
+                    return true;
                 }
             }
-            type();
+            return false;
         }
 
-        window.onload = function() {
-            const titleElement = document.querySelector('.title');
-            const message1 = document.getElementById('message1');
-            const message2 = document.getElementById('message2');
-            const message3 = document.getElementById('message3');
-            const startButton = document.getElementById('startButton');
-            const initialScreen = document.getElementById('initialScreen');
-            const mainScreen = document.getElementById('mainScreen');
-            const shakeText = document.querySelector('.shake-text');
-
-            titleElement.innerHTML = 'SPY<span>×</span>ACADEMY';
+        // 新しく追加するコード
+        let transitionType = 'timer';
+        let transitionValue = null;
+        
+        function selectOption(type) {
+            transitionType = type;
+            const timerInput = document.querySelector('#timeInput');
+            const timeInput = document.querySelector('#timeInput[type="time"]');
             
-            setInterval(() => {
-                shakeText.classList.add('shaking');
-                setTimeout(() => {
-                    shakeText.classList.remove('shaking');
-                }, 500);
-            }, 3000);
+            if (type === 'timer') {
+                timerInput.style.display = 'block';
+                timeInput.style.display = 'none';
+            } else {
+                timerInput.style.display = 'none';
+                timeInput.style.display = 'block';
+            }
+        }
 
-            shakeText.addEventListener('click', () => {
-                initialScreen.style.display = 'none';
-                mainScreen.style.display = 'block';
+        document.getElementById('startGameBtn').addEventListener('click', () => {
+            const input = transitionType === 'timer' ? 
+                document.querySelector('#timeInput[type="number"]') : 
+                document.querySelector('#timeInput[type="time"]');
+
+            if (!input.value) {
+                alert('時間を設定してください');
+                return;
+            }
+
+            if (transitionType === 'timer') {
+                transitionValue = parseInt(input.value) * 1000;
+            } else {
+                const [hours, minutes] = input.value.split(':');
+                const targetTime = new Date();
+                targetTime.setHours(parseInt(hours));
+                targetTime.setMinutes(parseInt(minutes));
+                targetTime.setSeconds(0);
                 
+                if (targetTime < new Date()) {
+                    targetTime.setDate(targetTime.getDate() + 1);
+                }
+                
+                transitionValue = targetTime.getTime();
+            }
+
+            document.getElementById('setupScreen').style.display = 'none';
+            const gameContainer = document.querySelector('.game-container');
+            gameContainer.classList.add('active');
+            document.querySelector('.ready-screen').style.display = 'block';
+        });
+
+        document.querySelector('.start-button').addEventListener('click', () => {
+            document.querySelector('.ready-screen').style.display = 'none';
+            gameStartTime = Date.now();
+            gameLoop();
+        });
+
+        // ゲームループ内の遷移チェックを修正
+        function checkTransition() {
+            if ((transitionType === 'timer' && Date.now() - gameStartTime > transitionValue) ||
+                (transitionType === 'time' && Date.now() >= transitionValue)) {
+                transition.classList.add('active');
                 setTimeout(() => {
-                    titleElement.classList.add('visible');
-                    
-                    setTimeout(() => {
-                        typeWriter(messages[0], message1, () => {
-                            typeWriter(messages[1], message2, () => {
-                                typeWriter(messages[2], message3, () => {
-                                    startButton.style.display = 'block';
-                                });
-                            });
-                        });
-                    }, 3000);
-                }, 1500);
-            });
-
-            startButton.addEventListener('click', () => {
-                message1.style.display = 'none';
-                message2.style.display = 'none';
-                message3.style.display = 'none';
-                startButton.style.display = 'none';
-
-                titleElement.classList.add('moved');
-
-                setTimeout(() => {
-                    // ランダムな位置を計算
-                    const getRandomPosition = () => {
-                        // 画面の有効範囲を取得（上部20%から下部90%まで）
-                        const maxWidth = window.innerWidth - 100; // 右端の余白
-                        const minHeight = window.innerHeight * 0.2; // 上部20%から
-                        const maxHeight = window.innerHeight * 0.9; // 下部90%まで
-
-                        return {
-                            left: Math.random() * maxWidth,
-                            top: minHeight + (Math.random() * (maxHeight - minHeight))
-                        };
-                    };
-
-                    // 隠しパスワードを追加
-                    const hiddenPassword = document.createElement('div');
-                    hiddenPassword.className = 'hidden-password';
-                    hiddenPassword.textContent = 'ABC';
-                    const position = getRandomPosition();
-                    hiddenPassword.style.left = `${position.left}px`;
-                    hiddenPassword.style.top = `${position.top}px`;
-                    document.body.appendChild(hiddenPassword);
-
-                    message1.style.display = 'block';
-                    message1.innerHTML = '';
-                    typeWriter(stage1Message, message1, () => {
-                        const inputGroup = document.createElement('div');
-                        inputGroup.className = 'input-group';
-
-                        const passwordInput = document.createElement('input');
-                        passwordInput.type = 'text';
-                        passwordInput.className = 'password-input';
-                        passwordInput.placeholder = 'パスワードを入力';
-
-                        const submitButton = document.createElement('button');
-                        submitButton.className = 'submit-button';
-                        submitButton.textContent = '確認';
-
-                        // パスワード確認のイベントリスナーを追加
-                        submitButton.addEventListener('click', () => {
-                            if (verifyPassword(passwordInput.value)) {
-                                showStage2();
-                            } else {
-                                passwordInput.value = '';
-                                passwordInput.placeholder = '不正解...もう一度試してみよう';
-                                setTimeout(() => {
-                                    passwordInput.placeholder = 'パスワードを入力';
-                                }, 2000);
-                            }
-                        });
-
-                        // Enterキーでも送信できるように
-                        passwordInput.addEventListener('keypress', (e) => {
-                            if (e.key === 'Enter') {
-                                submitButton.click();
-                            }
-                        });
-
-                        inputGroup.appendChild(passwordInput);
-                        inputGroup.appendChild(submitButton);
-                        message1.parentNode.appendChild(inputGroup);
-                    });
-                }, 2000);
-            });
+                    window.location.href = 'welcome.html';
+                }, 1000);
+                return true;
+            }
+            return false;
         }
 
-        function showStage2() {
-            const messages = document.querySelectorAll('.message');
-            messages.forEach(msg => msg.innerHTML = '');
-            
-            const inputGroup = document.querySelector('.input-group');
-            if (inputGroup) inputGroup.remove();
-            
-            const hiddenPassword = document.querySelector('.hidden-password');
-            if (hiddenPassword) hiddenPassword.remove();
+        // ゲームループ
+        function gameLoop() {
+            if (checkTransition()) {
+                transition.classList.add('active');
+                setTimeout(() => {
+                    window.location.href = 'welcome.html';
+                }, 1000);
+                return;
+            }
 
-            // メッセージを順番に表示
-            typeWriter(stage2Message[0], message1, () => {
-                typeWriter(stage2Message[1], message2, () => {
-                    typeWriter(stage2Message[2], message3, () => {
-                        // ここに次のステージへの遷移ボタンや入力フォームを追加
-                    });
+            // 画面クリア
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawBackground();
+
+            if (!isGameOver) {
+                // 鳥の更新
+                bird.velocity += bird.gravity;
+                bird.y += bird.velocity;
+
+                // 速度の制限（落下速度の上限を設定）
+                if (bird.velocity > 15) {
+                    bird.velocity = 15;
+                }
+
+                // パイプの更新
+                if (pipes[pipes.length - 1].x < canvas.width - 200) {
+                    createPipe();
+                }
+
+                pipes.forEach((pipe, index) => {
+                    pipe.x -= pipeSpeed;
+
+                    // スコア加算
+                    if (!pipe.passed && bird.x > pipe.x + pipeWidth) {
+                        score += 1;
+                        scoreElement.textContent = score.toString().padStart(2, '0');
+                        pipe.passed = true;
+                    }
+
+                    // 衝突判定
+                    if (checkCollision(pipe)) {
+                        isGameOver = true;
+                        gameOverScreen.style.display = 'block';
+                        document.querySelector('.overlay').style.display = 'block';
+                    }
+
+                    // 画面外のパイプを削除
+                    if (pipe.x + pipeWidth < 0) {
+                        pipes.splice(index, 1);
+                    }
                 });
-            });
-        }
 
-        // パスワード検証関数
-        function verifyPassword(input) {
-            return input.trim().toUpperCase() === 'ABC';
+                // 画面外に出ないように制限
+                if (bird.y < 0) {
+                    bird.y = 0;
+                    bird.velocity = 0;
+                }
+                if (bird.y > canvas.height) {
+                    isGameOver = true;
+                    gameOverScreen.style.display = 'block';
+                    document.querySelector('.overlay').style.display = 'block';
+                }
+            }
+
+            // 描画
+            drawPipes();
+            drawBird();
+
+            requestAnimationFrame(gameLoop);
         }
     </script>
 </body>
-</html>
+</html> 

@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPY×ACADEMY</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .matrix-rain {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 4;
+            background: #000;
+        }
+
+        .matrix-rain canvas {
+            display: block;
+        }
+
+        .matrix-rain.active {
+            display: block;
+            animation: fadeIn 0.5s forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+
+        .fade-out {
+            animation: fadeOut 1s forwards;
+        }
+    </style>
+</head>
+<body>
+    <div class="matrix-rain">
+        <canvas id="matrixCanvas"></canvas>
+    </div>
+    <img src="logo.png" alt="ICT PARK" class="logo">
+    <h1 class="title"></h1>
+    <div id="initialScreen">
+        <div class="initial-message">
+            <span class="shake-text">パ</span>スワードを入力してください。
+        </div>
+        <div class="input-group">
+            <input type="text" id="initialInput" placeholder="パスワードを入力">
+            <button id="submitButton">確認</button>
+        </div>
+    </div>
+    <div id="mainScreen" style="display: none;">
+        <div id="message1" class="message"></div>
+        <div id="message2" class="message"></div>
+        <div id="message3" class="message"></div>
+        <button id="startButton" class="button">ステージ1へ</button>
+    </div>
+
+    <script>
+        const messages = [
+            'ようこそ、SPY×ACADEMYへ！',
+            '5つのステージをクリアして隠されたメッセージを探せ。',
+            'Ready?'
+        ];
+
+        function typeWriter(text, element, callback) {
+            element.style.opacity = "1";
+            let i = 0;
+            const speed = 30;
+
+            function type() {
+                if (i < text.length) {
+                    if (text.charAt(i) === '\n') {
+                        element.innerHTML += '<br>';
+                    } else {
+                        element.innerHTML += text.charAt(i);
+                    }
+                    i++;
+                    setTimeout(type, speed);
+                } else if (callback) {
+                    setTimeout(callback, 1000);
+                }
+            }
+            type();
+        }
+
+        const matrixCanvas = document.getElementById('matrixCanvas');
+        const matrixCtx = matrixCanvas.getContext('2d');
+        const matrixRain = document.querySelector('.matrix-rain');
+
+        const latin = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        const nums = '0123456789';
+        const symbols = '!@#$%^&*()_+-=[]{}|;:,.<>?/~';
+        const alphabet = latin + nums + symbols;
+
+        const fontSize = 16;
+        let columns;
+        let rainDrops;
+
+        function setupMatrixRain() {
+            matrixCanvas.width = window.innerWidth;
+            matrixCanvas.height = window.innerHeight;
+            
+            columns = matrixCanvas.width/fontSize;
+            rainDrops = new Array(Math.floor(columns)).fill(1);
+        }
+
+        function drawMatrixRain() {
+            matrixCtx.fillStyle = 'rgba(0, 0, 0, 0.03)';
+            matrixCtx.fillRect(0, 0, matrixCanvas.width, matrixCanvas.height);
+            
+            matrixCtx.fillStyle = '#fff';
+            matrixCtx.font = fontSize + 'px "Courier New", monospace';
+
+            for(let i = 0; i < rainDrops.length; i++) {
+                const text = alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+                matrixCtx.fillText(text, i*fontSize, rainDrops[i]*fontSize);
+                
+                if(rainDrops[i]*fontSize > matrixCanvas.height && Math.random() > 0.99) {
+                    rainDrops[i] = 0;
+                }
+                rainDrops[i]++;
+            }
+        }
+
+        window.onload = function() {
+            // マトリックスアニメーションの開始
+            setupMatrixRain();
+            let startTime = Date.now();
+            const duration = 5000; // 5秒間のアニメーション
+
+            function animate() {
+                const currentTime = Date.now();
+                const elapsed = currentTime - startTime;
+                
+                if (elapsed < duration) {
+                    drawMatrixRain();
+                    requestAnimationFrame(animate);
+                } else {
+                    // アニメーション終了後、フェードアウトして本来の画面を表示
+                    matrixRain.classList.add('fade-out');
+                    setTimeout(() => {
+                        matrixRain.style.display = 'none';
+                        
+                        // 既存の画面表示ロジックを実行
+                        const titleElement = document.querySelector('.title');
+                        const message1 = document.getElementById('message1');
+                        const message2 = document.getElementById('message2');
+                        const message3 = document.getElementById('message3');
+                        const startButton = document.getElementById('startButton');
+                        const initialScreen = document.getElementById('initialScreen');
+                        const mainScreen = document.getElementById('mainScreen');
+                        const shakeText = document.querySelector('.shake-text');
+
+                        titleElement.innerHTML = 'SPY<span>×</span>ACADEMY';
+                        
+                        // 既存のシェイクアニメーション
+                        setInterval(() => {
+                            shakeText.classList.add('shaking');
+                            setTimeout(() => {
+                                shakeText.classList.remove('shaking');
+                            }, 500);
+                        }, 3000);
+
+                        // 既存のクリックイベントハンドラ
+                        shakeText.addEventListener('click', () => {
+                            initialScreen.style.display = 'none';
+                            mainScreen.style.display = 'block';
+                            
+                            setTimeout(() => {
+                                titleElement.classList.add('visible');
+                                
+                                setTimeout(() => {
+                                    typeWriter(messages[0], message1, () => {
+                                        typeWriter(messages[1], message2, () => {
+                                            typeWriter(messages[2], message3, () => {
+                                                startButton.style.display = 'block';
+                                            });
+                                        });
+                                    });
+                                }, 3000);
+                            }, 1500);
+                        });
+
+                        startButton.addEventListener('click', () => {
+                            window.location.href = 'stage1.html';
+                        });
+                    }, 1000);
+                }
+            }
+
+            animate();
+
+            // ウィンドウリサイズ時の処理
+            window.addEventListener('resize', setupMatrixRain);
+        }
+    </script>
+</body>
+</html>

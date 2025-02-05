@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPY×ACADEMY - Stage 1</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .title.moved {
+            position: fixed;
+            top: 150px;
+            left: 50%;
+            transform: translateX(-50%);
+            margin: 0;
+            z-index: 10;
+        }
+
+        .keyword-message {
+            color: #00ff00;
+            font-weight: bold;
+            font-size: 1.2em;
+            text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+            letter-spacing: 0.1em;
+            padding: 15px 0;
+            animation: glow 1.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from {
+                text-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
+            }
+            to {
+                text-shadow: 0 0 20px rgba(0, 255, 0, 0.8);
+            }
+        }
+
+        #mainScreen {
+            margin-top: 140px;
+        }
+    </style>
+</head>
+<body>
+    <img src="logo.png" alt="ICT PARK" class="logo">
+    <h1 class="title moved visible">SPY<span>×</span>ACADEMY</h1>
+    <div id="mainScreen" style="display: block;">
+        <div id="message1" class="message"></div>
+        <div id="message2" class="message"></div>
+        <div id="message3" class="message"></div>
+    </div>
+
+    <script>
+        const stage1Message = 'この画面のどこかに一つ目のパスワードが隠されている。\nよーく観察して、パスワードを見つけ出せ！';
+        
+        const stage2Message = [
+            'ステージ1クリア！',
+            'インターネットは、世界中のコンピュータをつなぐ巨大なネットワーク。',
+            'まるで世界中に張り巡らされた道路のように、\n情報が行き交っているんだ。',
+            'ステージ1のキーワードは「あ」だ！'
+        ];
+
+        function typeWriter(text, element, callback) {
+            element.style.opacity = "1";
+            let i = 0;
+            const speed = 30;
+
+            function type() {
+                if (i < text.length) {
+                    if (text.charAt(i) === '\n') {
+                        element.innerHTML += '<br>';
+                    } else {
+                        element.innerHTML += text.charAt(i);
+                    }
+                    i++;
+                    setTimeout(type, speed);
+                } else if (callback) {
+                    setTimeout(callback, 1000);
+                }
+            }
+            type();
+        }
+
+        window.onload = function() {
+            const message1 = document.getElementById('message1');
+            const message2 = document.getElementById('message2');
+            const message3 = document.getElementById('message3');
+
+            // ランダムな位置を計算
+            const getRandomPosition = () => {
+                const maxWidth = window.innerWidth - 100;
+                const minHeight = window.innerHeight * 0.2;
+                const maxHeight = window.innerHeight * 0.9;
+
+                return {
+                    left: Math.random() * maxWidth,
+                    top: minHeight + (Math.random() * (maxHeight - minHeight))
+                };
+            };
+
+            // 隠しパスワードを追加
+            const hiddenPassword = document.createElement('div');
+            hiddenPassword.className = 'hidden-password';
+            hiddenPassword.textContent = 'ABC';
+            const position = getRandomPosition();
+            hiddenPassword.style.left = `${position.left}px`;
+            hiddenPassword.style.top = `${position.top}px`;
+            document.body.appendChild(hiddenPassword);
+
+            typeWriter(stage1Message, message1, () => {
+                const inputGroup = document.createElement('div');
+                inputGroup.className = 'input-group';
+
+                const passwordInput = document.createElement('input');
+                passwordInput.type = 'text';
+                passwordInput.className = 'password-input';
+                passwordInput.placeholder = 'パスワードを入力';
+
+                const submitButton = document.createElement('button');
+                submitButton.className = 'submit-button';
+                submitButton.textContent = '確認';
+
+                submitButton.addEventListener('click', () => {
+                    if (verifyPassword(passwordInput.value)) {
+                        showStage2();
+                    } else {
+                        passwordInput.value = '';
+                        passwordInput.placeholder = '不正解...もう一度試してみよう';
+                        setTimeout(() => {
+                            passwordInput.placeholder = 'パスワードを入力';
+                        }, 2000);
+                    }
+                });
+
+                passwordInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        submitButton.click();
+                    }
+                });
+
+                inputGroup.appendChild(passwordInput);
+                inputGroup.appendChild(submitButton);
+                message1.parentNode.appendChild(inputGroup);
+            });
+        }
+
+        function showStage2() {
+            const messages = document.querySelectorAll('.message');
+            messages.forEach(msg => msg.innerHTML = '');
+            
+            const inputGroup = document.querySelector('.input-group');
+            if (inputGroup) inputGroup.remove();
+            
+            const hiddenPassword = document.querySelector('.hidden-password');
+            if (hiddenPassword) hiddenPassword.remove();
+
+            // message1: ステージクリア
+            typeWriter(stage2Message[0], message1, () => {
+                // message2: ネットワークの説明
+                typeWriter(stage2Message[1], message2, () => {
+                    // message3: 道路の比喩
+                    message3.classList.remove('keyword-message'); // 既存のクラスを削除
+                    typeWriter(stage2Message[2], message3, () => {
+                        // message3に改行を追加
+                        message3.innerHTML += '<br><br>';
+                        // キーワードメッセージ用の新しいspan要素を作成
+                        const keywordSpan = document.createElement('span');
+                        keywordSpan.classList.add('keyword-message');
+                        message3.appendChild(keywordSpan);
+                        // キーワードメッセージを表示
+                        typeWriter(stage2Message[3], keywordSpan);
+                    });
+                });
+            });
+        }
+
+        function verifyPassword(input) {
+            return input.trim().toUpperCase() === 'ABC';
+        }
+    </script>
+</body>
+</html> 
