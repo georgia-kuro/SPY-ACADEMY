@@ -42,21 +42,17 @@
     </head>
 
     <script>
-        function getPassword(seatNumber) {
-            const passwords = {
-                1: "さ",
-                2: "？",
-                3: "い",
-                4: "し",
-                5: "は",
-                6: "ご",
-                7: "り",
-                8: "り",
-                9: "の",
-                10: "と",
-            };
-            return passwords[seatNumber] || "";
-        }
+        const validPasswords = [
+            "さ",
+            "？",
+            "い",
+            "し",
+            "は",
+            "ご",
+            "り",
+            "の",
+            "と",
+        ];
 
         function typeWriter(text, element, callback) {
             element.style.opacity = "1";
@@ -155,8 +151,6 @@
 
         window.onload = function () {
             const message1 = document.getElementById("message1");
-            const seatNumber = sessionStorage.getItem("seatNumber");
-            const correctPassword = getPassword(seatNumber);
 
             typeWriter("画像から情報を取り出せ！", message1, () => {
                 const inputGroup = document.createElement("div");
@@ -172,8 +166,9 @@
                 submitButton.textContent = "確認";
 
                 submitButton.addEventListener("click", () => {
-                    if (passwordInput.value.trim() === correctPassword) {
+                    if (validPasswords.includes(passwordInput.value.trim())) {
                         inputGroup.remove();
+                        message1.innerHTML = ""; // メッセージをクリア
                         showMasterPasswordInput();
                     } else {
                         passwordInput.value = "";
