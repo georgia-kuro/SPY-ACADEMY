@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>SPY×ACADEMY - Stage 2</title>
+        <title>SPY×ACADEMY - Stage 3</title>
         <link
             href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400&display=swap"
             rel="stylesheet"
@@ -42,20 +42,21 @@
     </head>
 
     <script>
-        const message =
-            "会場内にQuick Responseが10個隠れている。\niPadでキーワードを探せ！";
-        const validPasswords = [
-            "まくら",
-            "らっぱ",
-            "どあ",
-            "あき",
-            "ぬま",
-            "こま",
-            "いぬ",
-            "ねこ",
-            "きつね",
-            "まど",
-        ];
+        function getPassword(seatNumber) {
+            const passwords = {
+                1: "さ",
+                2: "？",
+                3: "い",
+                4: "し",
+                5: "は",
+                6: "ご",
+                7: "り",
+                8: "り",
+                9: "の",
+                10: "と",
+            };
+            return passwords[seatNumber] || "";
+        }
 
         function typeWriter(text, element, callback) {
             element.style.opacity = "1";
@@ -78,29 +79,72 @@
             type();
         }
 
+        function showMasterPasswordInput() {
+            const message2 = document.getElementById("message2");
+            typeWriter(
+                "みんなのパスワードを合わせて、マスターパスワードを解読せよ！",
+                message2,
+                () => {
+                    const masterInputGroup = document.createElement("div");
+                    masterInputGroup.className = "input-group";
+
+                    const masterPasswordInput = document.createElement("input");
+                    masterPasswordInput.type = "text";
+                    masterPasswordInput.className = "password-input";
+                    masterPasswordInput.placeholder =
+                        "マスターパスワードを入力";
+
+                    const masterSubmitButton = document.createElement("button");
+                    masterSubmitButton.className = "submit-button";
+                    masterSubmitButton.textContent = "確認";
+
+                    masterSubmitButton.addEventListener("click", () => {
+                        if (masterPasswordInput.value.trim() === "らっぱ") {
+                            showStageClear();
+                        } else {
+                            masterPasswordInput.value = "";
+                            masterPasswordInput.placeholder =
+                                "不正解...もう一度試してみよう";
+                            setTimeout(() => {
+                                masterPasswordInput.placeholder =
+                                    "マスターパスワードを入力";
+                            }, 2000);
+                        }
+                    });
+
+                    masterPasswordInput.addEventListener("keypress", (e) => {
+                        if (e.key === "Enter") {
+                            masterSubmitButton.click();
+                        }
+                    });
+
+                    masterInputGroup.appendChild(masterPasswordInput);
+                    masterInputGroup.appendChild(masterSubmitButton);
+                    message2.appendChild(masterInputGroup);
+                },
+            );
+        }
+
         function showStageClear() {
             const messages = document.querySelectorAll(".message");
             messages.forEach((msg) => (msg.innerHTML = ""));
 
-            const inputGroup = document.querySelector(".input-group");
-            if (inputGroup) inputGroup.remove();
-
             const message1 = document.getElementById("message1");
             const message2 = document.getElementById("message2");
 
-            typeWriter("ステージ2クリア！", message1, () => {
+            typeWriter("ステージ3クリア！", message1, () => {
                 typeWriter(
-                    "インターネットでは冗長性がとても大事。\n世界中を蜘蛛の巣のようにインターネットが張り巡らされているんだ。",
+                    "実はスマホで撮った写真にも色々な情報が…",
                     message2,
                     () => {
                         setTimeout(() => {
                             const nextButton = document.createElement("button");
                             nextButton.className = "button";
-                            nextButton.textContent = "ステージ3へ";
+                            nextButton.textContent = "ステージ4へ";
                             nextButton.style.display = "block";
                             nextButton.style.marginTop = "50px";
                             nextButton.onclick = () => {
-                                window.location.href = "stage3.html";
+                                window.location.href = "stage4.html";
                             };
                             message2.appendChild(nextButton);
                         }, 1000);
@@ -111,8 +155,10 @@
 
         window.onload = function () {
             const message1 = document.getElementById("message1");
+            const seatNumber = sessionStorage.getItem("seatNumber");
+            const correctPassword = getPassword(seatNumber);
 
-            typeWriter(message, message1, () => {
+            typeWriter("画像から情報を取り出せ！", message1, () => {
                 const inputGroup = document.createElement("div");
                 inputGroup.className = "input-group";
 
@@ -126,8 +172,9 @@
                 submitButton.textContent = "確認";
 
                 submitButton.addEventListener("click", () => {
-                    if (validPasswords.includes(passwordInput.value.trim())) {
-                        showStageClear();
+                    if (passwordInput.value.trim() === correctPassword) {
+                        inputGroup.remove();
+                        showMasterPasswordInput();
                     } else {
                         passwordInput.value = "";
                         passwordInput.placeholder =

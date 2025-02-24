@@ -1,194 +1,297 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SPY×ACADEMY - Stage 1</title>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
-    <style>
-        .title.moved {
-            position: fixed;
-            top: 150px;
-            left: 50%;
-            transform: translateX(-50%);
-            margin: 0;
-            z-index: 10;
-        }
-
-        .keyword-message {
-            color: #00ff00;
-            font-weight: bold;
-            font-size: 1.2em;
-            text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
-            letter-spacing: 0.1em;
-            padding: 15px 0;
-            animation: glow 1.5s ease-in-out infinite alternate;
-        }
-
-        @keyframes glow {
-            from {
-                text-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>SPY×ACADEMY - Stage 1</title>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400&display=swap"
+            rel="stylesheet"
+        />
+        <link rel="stylesheet" href="styles.css" />
+        <style>
+            .title.moved {
+                position: fixed;
+                top: 150px;
+                left: 50%;
+                transform: translateX(-50%);
+                margin: 0;
+                z-index: 10;
             }
-            to {
-                text-shadow: 0 0 20px rgba(0, 255, 0, 0.8);
+
+            .keyword-message {
+                color: #00ff00;
+                font-weight: bold;
+                font-size: 1.2em;
+                text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+                letter-spacing: 0.1em;
+                padding: 15px 0;
+                animation: glow 1.5s ease-in-out infinite alternate;
             }
-        }
 
-        #mainScreen {
-            margin-top: 140px;
-        }
-    </style>
-</head>
-<body>
-    <img src="logo.png" alt="ICT PARK" class="logo">
-    <h1 class="title moved visible">SPY<span>×</span>ACADEMY</h1>
-    <div id="mainScreen" style="display: block;">
-        <div id="message1" class="message"></div>
-        <div id="message2" class="message"></div>
-        <div id="message3" class="message"></div>
-    </div>
-
-    <script>
-        const stage1Message = 'この画面のどこかに一つ目のパスワードが隠されている。\nよーく観察して、パスワードを見つけ出せ！';
-        
-        const stage2Message = [
-            'ステージ1クリア！',
-            'インターネットは、世界中のコンピュータをつなぐ巨大なネットワーク。',
-            'まるで世界中に張り巡らされた道路のように、情報が行き交っているんだ。',
-            'ステージ1のキーワードは「あ」だ！'
-        ];
-
-        function typeWriter(text, element, callback) {
-            element.style.opacity = "1";
-            let i = 0;
-            const speed = 30;
-
-            function type() {
-                if (i < text.length) {
-                    if (text.charAt(i) === '\n') {
-                        element.innerHTML += '<br>';
-                    } else {
-                        element.innerHTML += text.charAt(i);
-                    }
-                    i++;
-                    setTimeout(type, speed);
-                } else if (callback) {
-                    setTimeout(callback, 1000);
+            @keyframes glow {
+                from {
+                    text-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
+                }
+                to {
+                    text-shadow: 0 0 20px rgba(0, 255, 0, 0.8);
                 }
             }
-            type();
-        }
 
-        window.onload = function() {
-            const message1 = document.getElementById('message1');
-            const message2 = document.getElementById('message2');
-            const message3 = document.getElementById('message3');
+            #mainScreen {
+                margin-top: 140px;
+            }
+        </style>
+    </head>
+    <body>
+        <img src="logo.png" alt="ICT PARK" class="logo" />
+        <h1 class="title moved visible">SPY<span>×</span>ACADEMY</h1>
+        <div id="mainScreen" style="display: block">
+            <div id="message1" class="message"></div>
+            <div id="message2" class="message"></div>
+            <div id="message3" class="message"></div>
+        </div>
 
-            // ランダムな位置を計算
-            const getRandomPosition = () => {
-                const maxWidth = window.innerWidth - 100;
-                const minHeight = window.innerHeight * 0.2;
-                const maxHeight = window.innerHeight * 0.9;
+        <script>
+            function getKeyword(seatNumber) {
+                const keywords = {
+                    1: "の",
+                    2: "い",
+                    3: "に",
+                    4: "り",
+                    5: "な",
+                    6: "ご",
+                    7: "？",
+                    8: "ろ",
+                    9: "は",
+                    10: "ん",
+                };
+                return keywords[seatNumber] || "あ";
+            }
+
+            const stage1Message =
+                "この画面のどこかに一つ目のパスワードが隠されている。\nよーく観察して、パスワードを見つけ出せ！";
+
+            const stage2Message = [
+                "ステージ1クリア！",
+                "インターネットは、世界中のコンピュータをつなぐ巨大なネットワーク。",
+                "まるで世界中に張り巡らされた道路のように、情報が行き交っているんだ。",
+            ];
+
+            function getPassword(seatNumber) {
+                const passwords = {
+                    1: "QOZbs38kWl",
+                    2: "OTP1YMsLVm",
+                    3: "T4dEYN4mBa",
+                    4: "jgFLQ6J5HF",
+                    5: "OCNixhIozu",
+                    6: "eotvtTWCvw",
+                    7: "zTYb15HWAi",
+                    8: "f0ciTQjd1m",
+                    9: "VeNCkXAUnP",
+                    10: "7D5PqEpArQ",
+                };
+                return passwords[seatNumber] || "ABC";
+            }
+
+            function getPasswordPosition() {
+                const title = document.querySelector(".title");
+                const titleRect = title.getBoundingClientRect();
+                const message1 = document.getElementById("message1");
+                const message1Rect = message1.getBoundingClientRect();
 
                 return {
-                    left: Math.random() * maxWidth,
-                    top: minHeight + (Math.random() * (maxHeight - minHeight))
+                    left: Math.random() * (window.innerWidth - 100),
+                    top:
+                        titleRect.bottom +
+                        Math.random() *
+                            (message1Rect.top - titleRect.bottom - 20),
                 };
+            }
+
+            function typeWriter(text, element, callback) {
+                element.style.opacity = "1";
+                let i = 0;
+                const speed = 30;
+
+                function type() {
+                    if (i < text.length) {
+                        if (text.charAt(i) === "\n") {
+                            element.innerHTML += "<br>";
+                        } else {
+                            element.innerHTML += text.charAt(i);
+                        }
+                        i++;
+                        setTimeout(type, speed);
+                    } else if (callback) {
+                        setTimeout(callback, 1000);
+                    }
+                }
+                type();
+            }
+
+            window.onload = function () {
+                const message1 = document.getElementById("message1");
+                const message2 = document.getElementById("message2");
+                const message3 = document.getElementById("message3");
+
+                const seatNumber = sessionStorage.getItem("seatNumber");
+                const password = getPassword(seatNumber);
+
+                const hiddenPassword = document.createElement("div");
+                hiddenPassword.className = "hidden-password";
+                hiddenPassword.textContent = password;
+                const position = getPasswordPosition();
+                hiddenPassword.style.left = `${position.left}px`;
+                hiddenPassword.style.top = `${position.top}px`;
+                document.body.appendChild(hiddenPassword);
+
+                window.verifyPassword = function (input) {
+                    return (
+                        input.trim().toUpperCase() === password.toUpperCase()
+                    );
+                };
+
+                typeWriter(stage1Message, message1, () => {
+                    const inputGroup = document.createElement("div");
+                    inputGroup.className = "input-group";
+
+                    const passwordInput = document.createElement("input");
+                    passwordInput.type = "text";
+                    passwordInput.className = "password-input";
+                    passwordInput.placeholder = "パスワードを入力";
+
+                    const submitButton = document.createElement("button");
+                    submitButton.className = "submit-button";
+                    submitButton.textContent = "確認";
+
+                    submitButton.addEventListener("click", () => {
+                        if (verifyPassword(passwordInput.value)) {
+                            showStage2();
+                        } else {
+                            passwordInput.value = "";
+                            passwordInput.placeholder =
+                                "不正解...もう一度試してみよう";
+                            setTimeout(() => {
+                                passwordInput.placeholder = "パスワードを入力";
+                            }, 2000);
+                        }
+                    });
+
+                    passwordInput.addEventListener("keypress", (e) => {
+                        if (e.key === "Enter") {
+                            submitButton.click();
+                        }
+                    });
+
+                    inputGroup.appendChild(passwordInput);
+                    inputGroup.appendChild(submitButton);
+                    message1.parentNode.appendChild(inputGroup);
+                });
             };
 
-            // 隠しパスワードを追加
-            const hiddenPassword = document.createElement('div');
-            hiddenPassword.className = 'hidden-password';
-            hiddenPassword.textContent = 'ABC';
-            const position = getRandomPosition();
-            hiddenPassword.style.left = `${position.left}px`;
-            hiddenPassword.style.top = `${position.top}px`;
-            document.body.appendChild(hiddenPassword);
+            function showStage2() {
+                const messages = document.querySelectorAll(".message");
+                messages.forEach((msg) => (msg.innerHTML = ""));
 
-            typeWriter(stage1Message, message1, () => {
-                const inputGroup = document.createElement('div');
-                inputGroup.className = 'input-group';
+                const inputGroup = document.querySelector(".input-group");
+                if (inputGroup) inputGroup.remove();
 
-                const passwordInput = document.createElement('input');
-                passwordInput.type = 'text';
-                passwordInput.className = 'password-input';
-                passwordInput.placeholder = 'パスワードを入力';
+                const hiddenPassword =
+                    document.querySelector(".hidden-password");
+                if (hiddenPassword) hiddenPassword.remove();
 
-                const submitButton = document.createElement('button');
-                submitButton.className = 'submit-button';
-                submitButton.textContent = '確認';
+                const seatNumber = sessionStorage.getItem("seatNumber");
+                const keyword = getKeyword(seatNumber);
 
-                submitButton.addEventListener('click', () => {
-                    if (verifyPassword(passwordInput.value)) {
-                        showStage2();
-                    } else {
-                        passwordInput.value = '';
-                        passwordInput.placeholder = '不正解...もう一度試してみよう';
-                        setTimeout(() => {
-                            passwordInput.placeholder = 'パスワードを入力';
-                        }, 2000);
-                    }
-                });
+                typeWriter(stage2Message[0], message1, () => {
+                    typeWriter(stage2Message[1], message2, () => {
+                        message3.classList.remove("keyword-message");
+                        typeWriter(stage2Message[2], message3, () => {
+                            message3.innerHTML += "<br><br>";
+                            const keywordSpan = document.createElement("span");
+                            keywordSpan.classList.add("keyword-message");
+                            message3.appendChild(keywordSpan);
+                            typeWriter(
+                                `君のキーワードは「${keyword}」だ！`,
+                                keywordSpan,
+                                () => {
+                                    message3.innerHTML += "<br><br>";
+                                    typeWriter(
+                                        "みんなのキーワードを集めて、ステージ1のマスターキーワードを解読せよ！",
+                                        message3,
+                                        () => {
+                                            // マスターパスワード入力用UI
+                                            const masterInputGroup =
+                                                document.createElement("div");
+                                            masterInputGroup.className =
+                                                "input-group";
 
-                passwordInput.addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter') {
-                        submitButton.click();
-                    }
-                });
+                                            const masterPasswordInput =
+                                                document.createElement("input");
+                                            masterPasswordInput.type = "text";
+                                            masterPasswordInput.className =
+                                                "password-input";
+                                            masterPasswordInput.placeholder =
+                                                "マスターパスワードを入力";
 
-                inputGroup.appendChild(passwordInput);
-                inputGroup.appendChild(submitButton);
-                message1.parentNode.appendChild(inputGroup);
-            });
-        }
+                                            const masterSubmitButton =
+                                                document.createElement(
+                                                    "button",
+                                                );
+                                            masterSubmitButton.className =
+                                                "submit-button";
+                                            masterSubmitButton.textContent =
+                                                "確認";
 
-        function showStage2() {
-            const messages = document.querySelectorAll('.message');
-            messages.forEach(msg => msg.innerHTML = '');
-            
-            const inputGroup = document.querySelector('.input-group');
-            if (inputGroup) inputGroup.remove();
-            
-            const hiddenPassword = document.querySelector('.hidden-password');
-            if (hiddenPassword) hiddenPassword.remove();
+                                            masterSubmitButton.addEventListener(
+                                                "click",
+                                                () => {
+                                                    if (
+                                                        masterPasswordInput.value.trim() ===
+                                                        "あか"
+                                                    ) {
+                                                        window.location.href =
+                                                            "stage2.html";
+                                                    } else {
+                                                        masterPasswordInput.value =
+                                                            "";
+                                                        masterPasswordInput.placeholder =
+                                                            "不正解...もう一度試してみよう";
+                                                        setTimeout(() => {
+                                                            masterPasswordInput.placeholder =
+                                                                "マスターパスワードを入力";
+                                                        }, 2000);
+                                                    }
+                                                },
+                                            );
 
-            // message1: ステージクリア
-            typeWriter(stage2Message[0], message1, () => {
-                // message2: ネットワークの説明
-                typeWriter(stage2Message[1], message2, () => {
-                    // message3: 道路の比喩
-                    message3.classList.remove('keyword-message');
-                    typeWriter(stage2Message[2], message3, () => {
-                        // message3に改行を追加
-                        message3.innerHTML += '<br><br>';
-                        // キーワードメッセージ用の新しいspan要素を作成
-                        const keywordSpan = document.createElement('span');
-                        keywordSpan.classList.add('keyword-message');
-                        message3.appendChild(keywordSpan);
-                        // キーワードメッセージを表示
-                        typeWriter(stage2Message[3], keywordSpan, () => {
-                            // キーワード表示後、3秒待ってからボタンを表示
-                            setTimeout(() => {
-                                const nextButton = document.createElement('button');
-                                nextButton.className = 'button';
-                                nextButton.textContent = 'ステージ2へ';
-                                nextButton.style.display = 'block';
-                                nextButton.style.marginTop = '50px';
-                                nextButton.onclick = () => {
-                                    window.location.href = 'stage2.html';
-                                };
-                                message3.appendChild(nextButton);
-                            }, 3000);
+                                            masterPasswordInput.addEventListener(
+                                                "keypress",
+                                                (e) => {
+                                                    if (e.key === "Enter") {
+                                                        masterSubmitButton.click();
+                                                    }
+                                                },
+                                            );
+
+                                            masterInputGroup.appendChild(
+                                                masterPasswordInput,
+                                            );
+                                            masterInputGroup.appendChild(
+                                                masterSubmitButton,
+                                            );
+                                            message3.appendChild(
+                                                masterInputGroup,
+                                            );
+                                        },
+                                    );
+                                },
+                            );
                         });
                     });
                 });
-            });
-        }
-
-        function verifyPassword(input) {
-            return input.trim().toUpperCase() === 'ABC';
-        }
-    </script>
-</body>
-</html> 
+            }
+        </script>
+    </body>
+</html>

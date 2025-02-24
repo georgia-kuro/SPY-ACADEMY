@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="ja">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>SPY×ACADEMY - Stage 4</title>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400&display=swap"
+            rel="stylesheet"
+        />
+        <link rel="stylesheet" href="styles.css" />
+        <style>
+            .title.moved {
+                position: fixed;
+                top: 150px;
+                left: 50%;
+                transform: translateX(-50%);
+                margin: 0;
+                z-index: 10;
+                font-size: min(64px, 12vw);
+                font-weight: 900;
+                letter-spacing: 0;
+                font-family: "Impact", sans-serif;
+                text-transform: uppercase;
+                color: #000;
+                -webkit-text-stroke: 1.5px #fff;
+            }
+
+            .title.moved span {
+                color: #666;
+                font-family: "Impact", sans-serif;
+                font-weight: 900;
+                font-size: 1em;
+                margin: 0 0.05em;
+                -webkit-text-stroke: 0;
+            }
+
+            #mainScreen {
+                margin-top: 140px;
+            }
+
+            .links-container {
+                display: flex;
+                flex-direction: column;
+                gap: 15px;
+                margin-top: 30px;
+            }
+
+            .amazon-link {
+                color: #fff;
+                text-decoration: none;
+                padding: 10px;
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                border-radius: 5px;
+                transition: all 0.3s ease;
+            }
+
+            .amazon-link:hover {
+                background: rgba(255, 255, 255, 0.1);
+                border-color: rgba(255, 255, 255, 0.4);
+            }
+
+            .matrix-rain {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                pointer-events: none;
+                z-index: 4;
+                background: #000;
+                display: none;
+            }
+
+            .matrix-rain canvas {
+                display: block;
+            }
+
+            .matrix-rain.active {
+                display: block;
+                animation: fadeIn 0.5s forwards;
+            }
+
+            @keyframes fadeIn {
+                from {
+                    opacity: 0;
+                }
+                to {
+                    opacity: 1;
+                }
+            }
+
+            @keyframes fadeOut {
+                from {
+                    opacity: 1;
+                }
+                to {
+                    opacity: 0;
+                }
+            }
+
+            .fade-out {
+                animation: fadeOut 1s forwards;
+            }
+
+            .links-container {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+                margin-top: 30px;
+                max-width: 800px;
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            .amazon-link {
+                color: #fff;
+                text-decoration: none;
+                padding: 10px;
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                border-radius: 5px;
+                transition: all 0.3s ease;
+                text-align: center;
+            }
+
+            .amazon-link:hover {
+                background: rgba(255, 255, 255, 0.1);
+                border-color: rgba(255, 255, 255, 0.4);
+            }
+        </style>
+    </head>
+
+    <script>
+        function getPassword(seatNumber) {
+            const passwords = {
+                1: "お",
+                2: "ん",
+                3: "た",
+                4: "？",
+                5: "て",
+                6: "は",
+                7: "の",
+                8: "は",
+                9: "い",
+                10: "も",
+            };
+            return passwords[seatNumber] || "";
+        }
+
+        const links = [
+            "https://www.amazon.co.jp",
+            "https://www.amaz0n.co.jp",
+            "https://www.amazom.co.jp",
+            "https://www.anazon.co.jp",
+            "https://www.amason.co.jp",
+            "https://www.amazon-jp.com",
+            "https://www.amazon.jp.co",
+            "https://www.amazon-shop.co.jp",
+            "https://www.amazonn.co.jp",
+            "https://www.amozon.co.jp",
+        ];
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function showMatrixAnimation() {
+            const matrixRain = document.querySelector(".matrix-rain");
+            const title = document.querySelector(".title");
+
+            matrixRain.style.display = "block";
+            title.style.display = "none";
+
+            // リンクを一旦非表示に
+            const existingContainer =
+                document.querySelector(".links-container");
+            if (existingContainer) {
+                existingContainer.style.display = "none";
+            }
+
+            // メッセージも非表示に
+            const message1 = document.getElementById("message1");
+            message1.innerHTML = "";
+
+            setupMatrixRain();
+            let startTime = Date.now();
+            const duration = 2000;
+
+            function animate() {
+                const currentTime = Date.now();
+                const elapsed = currentTime - startTime;
+
+                if (elapsed < duration) {
+                    drawMatrixRain();
+                    requestAnimationFrame(animate);
+                } else {
+                    matrixRain.classList.add("fade-out");
+                    setTimeout(() => {
+                        matrixRain.style.display = "none";
+                        matrixRain.classList.remove("fade-out");
+
+                        // 最初の表示と同じ流れで再表示
+                        setTimeout(() => {
+                            title.style.display = ""; // タイトルを表示
+                            typeWriter(
+                                "本物のAmazonのサイトを見破れ！",
+                                message1,
+                                () => {
+                                    if (existingContainer) {
+                                        const links = Array.from(
+                                            existingContainer.children,
+                                        );
+                                        existingContainer.innerHTML = "";
+                                        shuffleArray(links).forEach((link) => {
+                                            existingContainer.appendChild(link);
+                                        });
+                                        existingContainer.style.display =
+                                            "grid";
+                                    }
+                                },
+                            );
+                        }, 1000);
+                    }, 100);
+                }
+            }
+
+            animate();
+        }
+
+        // マトリックスの設定関数を追加
+        function setupMatrixRain() {
+            const matrixCanvas = document.getElementById("matrixCanvas");
+            const matrixCtx = matrixCanvas.getContext("2d");
+
+            matrixCanvas.width = window.innerWidth;
+            matrixCanvas.height = window.innerHeight;
+
+            columns = matrixCanvas.width / fontSize;
+            rainDrops = new Array(Math.floor(columns)).fill(1);
+        }
+
+        // マトリックスの描画関数を追加
+        function drawMatrixRain() {
+            const matrixCanvas = document.getElementById("matrixCanvas");
+            const matrixCtx = matrixCanvas.getContext("2d");
+
+            matrixCtx.fillStyle = "rgba(0, 0, 0, 0.03)";
+            matrixCtx.fillRect(0, 0, matrixCanvas.width, matrixCanvas.height);
+
+            matrixCtx.fillStyle = "#fff";
+            matrixCtx.font = fontSize + 'px "Courier New", monospace';
+
+            for (let i = 0; i < rainDrops.length; i++) {
+                const text = alphabet.charAt(
+                    Math.floor(Math.random() * alphabet.length),
+                );
+                matrixCtx.fillText(text, i * fontSize, rainDrops[i] * fontSize);
+
+                if (
+                    rainDrops[i] * fontSize > matrixCanvas.height &&
+                    Math.random() > 0.99
+                ) {
+                    rainDrops[i] = 0;
+                }
+                rainDrops[i]++;
+            }
+        }
+
+        // グローバル変数を追加
+        const latin = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        const nums = "0123456789";
+        const symbols = "!@#$%^&*()_+-=[]{}|;:,.<>?/~";
+        const alphabet = latin + nums + symbols;
+        const fontSize = 16;
+        let columns;
+        let rainDrops;
+
+        // ウィンドウリサイズ時のイベントリスナーを追加
+        window.addEventListener("resize", setupMatrixRain);
+
+        function typeWriter(text, element, callback) {
+            element.style.opacity = "1";
+            let i = 0;
+            const speed = 30;
+
+            function type() {
+                if (i < text.length) {
+                    if (text.charAt(i) === "\n") {
+                        element.innerHTML += "<br>";
+                    } else {
+                        element.innerHTML += text.charAt(i);
+                    }
+                    i++;
+                    setTimeout(type, speed);
+                } else if (callback) {
+                    setTimeout(callback, 1000);
+                }
+            }
+            type();
+        }
+
+        function showMasterPasswordInput(password) {
+            const message1 = document.getElementById("message1");
+            const message2 = document.getElementById("message2");
+
+            message1.innerHTML = `君のパスワードは「${password}」だ！`;
+
+            typeWriter(
+                "みんなのパスワードを合わせて、マスターパスワードを解読せよ！",
+                message2,
+                () => {
+                    const masterInputGroup = document.createElement("div");
+                    masterInputGroup.className = "input-group";
+
+                    const masterPasswordInput = document.createElement("input");
+                    masterPasswordInput.type = "text";
+                    masterPasswordInput.className = "password-input";
+                    masterPasswordInput.placeholder =
+                        "マスターパスワードを入力";
+
+                    const masterSubmitButton = document.createElement("button");
+                    masterSubmitButton.className = "submit-button";
+                    masterSubmitButton.textContent = "確認";
+
+                    masterSubmitButton.addEventListener("click", () => {
+                        if (masterPasswordInput.value.trim() === "うら") {
+                            showStageClear();
+                        } else {
+                            masterPasswordInput.value = "";
+                            masterPasswordInput.placeholder =
+                                "不正解...もう一度試してみよう";
+                            setTimeout(() => {
+                                masterPasswordInput.placeholder =
+                                    "マスターパスワードを入力";
+                            }, 2000);
+                        }
+                    });
+
+                    masterPasswordInput.addEventListener("keypress", (e) => {
+                        if (e.key === "Enter") {
+                            masterSubmitButton.click();
+                        }
+                    });
+
+                    masterInputGroup.appendChild(masterPasswordInput);
+                    masterInputGroup.appendChild(masterSubmitButton);
+                    message2.appendChild(masterInputGroup);
+                },
+            );
+        }
+
+        function showStageClear() {
+            const messages = document.querySelectorAll(".message");
+            messages.forEach((msg) => (msg.innerHTML = ""));
+
+            const message1 = document.getElementById("message1");
+            const message2 = document.getElementById("message2");
+            const message3 = document.getElementById("message3");
+
+            typeWriter("ステージ4クリア！", message1, () => {
+                typeWriter(
+                    "実は世の中には偽サイトが溢れている。",
+                    message2,
+                    () => {
+                        typeWriter(
+                            "さまざまな見破り方を学ぼう。",
+                            message3,
+                            () => {
+                                setTimeout(() => {
+                                    const nextButton =
+                                        document.createElement("button");
+                                    nextButton.className = "button";
+                                    nextButton.textContent = "最終ステージへ";
+                                    nextButton.style.display = "block";
+                                    nextButton.style.marginTop = "50px";
+                                    nextButton.onclick = () => {
+                                        window.location.href = "stage5.html";
+                                    };
+                                    message3.appendChild(nextButton);
+                                }, 1000);
+                            },
+                        );
+                    },
+                );
+            });
+        }
+
+        function displayLinks() {
+            const message1 = document.getElementById("message1");
+
+            // 既存のリンクコンテナを削除
+            const existingContainer =
+                document.querySelector(".links-container");
+            if (existingContainer) {
+                existingContainer.remove();
+            }
+
+            const linksContainer = document.createElement("div");
+            linksContainer.className = "links-container";
+
+            const shuffledLinks = shuffleArray([...links]);
+            shuffledLinks.forEach((link) => {
+                const a = document.createElement("a");
+                a.href = "#";
+                a.className = "amazon-link";
+                a.textContent = link;
+                a.addEventListener("click", (e) => {
+                    e.preventDefault();
+                    if (link === "https://www.amazon.co.jp") {
+                        const seatNumber = sessionStorage.getItem("seatNumber");
+                        const password = getPassword(seatNumber);
+                        linksContainer.remove();
+                        showMasterPasswordInput(password);
+                    } else {
+                        showMatrixAnimation();
+                    }
+                });
+                linksContainer.appendChild(a);
+            });
+
+            message1.parentNode.appendChild(linksContainer);
+        }
+
+        window.onload = function () {
+            const message1 = document.getElementById("message1");
+            typeWriter("本物のアマゾンのサイトを見破れ！", message1, () => {
+                displayLinks();
+            });
+        };
+    </script>
+
+    <div id="matrixAnimation" class="matrix-animation"></div>
+
+    <body>
+        <img src="logo.png" alt="ICT PARK" class="logo" />
+        <h1 class="title moved visible">SPY<span>×</span>ACADEMY</h1>
+        <div id="mainScreen" style="display: block">
+            <div id="message1" class="message"></div>
+            <div id="message2" class="message"></div>
+            <div id="message3" class="message"></div>
+        </div>
+        <div class="matrix-rain">
+            <canvas id="matrixCanvas"></canvas>
+        </div>
+    </body>
+</html>

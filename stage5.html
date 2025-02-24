@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="ja">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>SPY×ACADEMY - Stage Final</title>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400&display=swap"
+            rel="stylesheet"
+        />
+        <link rel="stylesheet" href="styles.css" />
+        <style>
+            .title.moved {
+                position: fixed;
+                top: 150px;
+                left: 50%;
+                transform: translateX(-50%);
+                margin: 0;
+                z-index: 10;
+                font-size: min(64px, 12vw);
+                font-weight: 900;
+                letter-spacing: 0;
+                font-family: "Impact", sans-serif;
+                text-transform: uppercase;
+                color: #000;
+                -webkit-text-stroke: 1.5px #fff;
+            }
+
+            .title.moved span {
+                color: #666;
+                font-family: "Impact", sans-serif;
+                font-weight: 900;
+                font-size: 1em;
+                margin: 0 0.05em;
+                -webkit-text-stroke: 0;
+            }
+
+            #mainScreen {
+                margin-top: 140px;
+            }
+
+            .firework-container {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                pointer-events: none;
+                z-index: 91;
+            }
+
+            .firework {
+                position: absolute;
+                bottom: 0;
+                animation: rise 1s ease-out;
+                width: 4px;
+                height: 4px;
+                background: rgba(255, 255, 255, 0.5);
+                box-shadow: 0 0 6px #fff; /* 光る効果を追加 */
+            }
+
+            .explosion {
+                position: absolute;
+                transform: translate(-50%, -50%);
+            }
+
+            .particle {
+                position: absolute;
+                width: 4px;
+                height: 4px;
+                background: #fff;
+                border-radius: 50%;
+                animation: expand 1.5s ease-out forwards;
+                box-shadow: 0 0 10px #fff; /* より強い光る効果 */
+            }
+
+            /* パーティクルの軌跡効果を追加 */
+            .particle::after {
+                content: "";
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                border-radius: 50%;
+                background: inherit;
+                animation: trail 0.5s linear forwards;
+            }
+
+            @keyframes trail {
+                to {
+                    transform: scale(0.1);
+                    opacity: 0;
+                }
+            }
+
+            @keyframes rise {
+                from {
+                    transform: translateY(0);
+                }
+                to {
+                    transform: translateY(calc(-100vh + 100px));
+                }
+            }
+
+            @keyframes expand {
+                0% {
+                    transform: translate(0, 0) scale(1);
+                    opacity: 1;
+                }
+                50% {
+                    opacity: 1;
+                }
+                100% {
+                    transform: translate(var(--x), var(--y)) scale(0.1);
+                    opacity: 0;
+                }
+            }
+
+            .completion-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.9);
+                z-index: 5;
+                display: none;
+                opacity: 0;
+                transition: opacity 1s;
+            }
+
+            .completion-overlay.active {
+                display: block;
+                opacity: 1;
+            }
+
+            .completion-message {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                color: #fff;
+                font-size: 48px;
+                font-weight: 200;
+                letter-spacing: 8px;
+                text-align: center;
+                opacity: 0;
+                transition: all 2s;
+                text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+            }
+
+            .logo {
+                z-index: 10; /* タイトルと同じz-indexを設定 */
+            }
+
+            .completion-message.active {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1.1);
+            }
+        </style>
+    </head>
+    <body>
+        <img src="logo.png" alt="ICT PARK" class="logo" />
+        <h1 class="title moved visible">SPY<span>×</span>ACADEMY</h1>
+        <div id="mainScreen" style="display: block">
+            <div id="message1" class="message"></div>
+            <div id="message2" class="message"></div>
+            <div id="message3" class="message"></div>
+        </div>
+        <div class="completion-overlay">
+            <div class="completion-message"></div>
+        </div>
+
+        <script>
+            function typeWriter(text, element, callback) {
+                element.style.opacity = "1";
+                let i = 0;
+                const speed = 30;
+
+                function type() {
+                    if (i < text.length) {
+                        if (text.charAt(i) === "\n") {
+                            element.innerHTML += "<br>";
+                        } else {
+                            element.innerHTML += text.charAt(i);
+                        }
+                        i++;
+                        setTimeout(type, speed);
+                    } else if (callback) {
+                        setTimeout(callback, 1000);
+                    }
+                }
+                type();
+            }
+
+            function createFirework(x) {
+                const fireworkContainer = document.createElement("div");
+                fireworkContainer.className = "firework-container";
+
+                // 打ち上げ火花
+                const firework = document.createElement("div");
+                firework.className = "firework";
+                firework.style.left = x + "px";
+
+                fireworkContainer.appendChild(firework);
+
+                // 爆発位置の計算
+                const finalY = 100 + Math.random() * (window.innerHeight * 0.5);
+
+                // 打ち上げ後の爆発
+                setTimeout(() => {
+                    createExplosion(x, finalY, fireworkContainer);
+                    firework.remove();
+                }, 1000);
+
+                return fireworkContainer;
+            }
+
+            function createExplosion(x, y, container) {
+                const explosion = document.createElement("div");
+                explosion.className = "explosion";
+                explosion.style.left = x + "px";
+                explosion.style.top = y + "px";
+
+                // パーティクルの数を増やす
+                const particleCount = 120; // 80から120に増加
+                for (let i = 0; i < particleCount; i++) {
+                    const particle = document.createElement("div");
+                    particle.className = "particle";
+
+                    // より複雑なパターンを作成
+                    const angle = (i / particleCount) * Math.PI * 2;
+                    const velocity = 150 + Math.random() * 200; // 速度を上げる
+                    const spread = Math.random() * 0.3; // ばらつきを増やす
+
+                    // パーティクルの軌道を設定
+                    const x = Math.cos(angle + spread) * velocity;
+                    const y = Math.sin(angle + spread) * velocity;
+
+                    particle.style.setProperty("--x", x + "px");
+                    particle.style.setProperty("--y", y + "px");
+
+                    // より強い光の効果
+                    const brightness = 80 + Math.random() * 20;
+                    particle.style.background = `rgba(255, 255, 255, ${Math.random() * 0.2 + 0.8})`;
+                    particle.style.boxShadow = `0 0 ${Math.random() * 8 + 4}px rgba(255, 255, 255, 0.8),
+                                              0 0 ${Math.random() * 12 + 8}px rgba(255, 255, 255, 0.5)`;
+
+                    // パーティクルのサイズをランダムに
+                    const size = 3 + Math.random() * 3;
+                    particle.style.width = size + "px";
+                    particle.style.height = size + "px";
+
+                    explosion.appendChild(particle);
+                }
+
+                container.appendChild(explosion);
+
+                // 爆発エフェクトの後にクリーンアップ
+                setTimeout(() => explosion.remove(), 2000);
+            }
+
+            function startContinuousFireworks() {
+                let active = true;
+
+                function launchFirework() {
+                    if (!active) return;
+
+                    const x = Math.random() * window.innerWidth;
+                    const firework = createFirework(x);
+                    document
+                        .querySelector(".completion-overlay")
+                        .appendChild(firework);
+
+                    setTimeout(() => firework.remove(), 3000);
+                }
+
+                // より頻繁に花火を打ち上げる
+                function launchSequence() {
+                    if (!active) return;
+
+                    const count = 3 + Math.floor(Math.random() * 4); // より多くの花火を同時に
+                    for (let i = 0; i < count; i++) {
+                        setTimeout(
+                            launchFirework,
+                            i * (200 + Math.random() * 200),
+                        );
+                    }
+
+                    setTimeout(launchSequence, 1500 + Math.random() * 800); // 間隔を短く
+                }
+
+                launchSequence();
+            }
+
+            function showCompletionMessage() {
+                const overlay = document.querySelector(".completion-overlay");
+                const message = document.querySelector(".completion-message");
+
+                // オーバーレイの背景を半透明に設定
+                overlay.style.background = "rgba(0, 0, 0, 0.9)";
+
+                message.textContent = "全ミッションクリア！";
+                overlay.classList.add("active");
+
+                setTimeout(() => {
+                    message.classList.add("active");
+                    startContinuousFireworks();
+                }, 1000);
+            }
+
+            window.onload = function () {
+                const message1 = document.getElementById("message1");
+
+                typeWriter(
+                    "会場内のどこかに最後のパスワードが隠れている！",
+                    message1,
+                    () => {
+                        const inputGroup = document.createElement("div");
+                        inputGroup.className = "input-group";
+
+                        const passwordInput = document.createElement("input");
+                        passwordInput.type = "text";
+                        passwordInput.className = "password-input";
+                        passwordInput.placeholder = "最後のパスワードを入力";
+
+                        const submitButton = document.createElement("button");
+                        submitButton.className = "submit-button";
+                        submitButton.textContent = "確認";
+
+                        submitButton.addEventListener("click", () => {
+                            const input = passwordInput.value
+                                .trim()
+                                .toUpperCase();
+                            if (input === "LAC" || input === "ＬＡＣ") {
+                                inputGroup.remove();
+                                message1.innerHTML = "";
+                                showCompletionMessage();
+                            } else {
+                                passwordInput.value = "";
+                                passwordInput.placeholder =
+                                    "不正解...もう一度試してみよう";
+                                setTimeout(() => {
+                                    passwordInput.placeholder =
+                                        "最後のパスワードを入力";
+                                }, 2000);
+                            }
+                        });
+
+                        passwordInput.addEventListener("keypress", (e) => {
+                            if (e.key === "Enter") {
+                                submitButton.click();
+                            }
+                        });
+
+                        inputGroup.appendChild(passwordInput);
+                        inputGroup.appendChild(submitButton);
+                        message1.parentNode.appendChild(inputGroup);
+                    },
+                );
+            };
+        </script>
+    </body>
+</html>

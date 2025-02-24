@@ -1,652 +1,755 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flappy Game</title>
-    <style>
-        body {
-            margin: 0;
-            overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background: #0f172a;
-            font-family: 'Helvetica Neue', Arial, sans-serif;
-            position: relative;
-        }
-        
-        #gameCanvas {
-            border: 2px solid rgba(255, 255, 255, 0.05);
-            border-radius: 20px;
-            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
-            box-shadow: 0 0 50px rgba(0, 0, 0, 0.2);
-        }
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Flappy Game</title>
+        <style>
+            body {
+                margin: 0;
+                overflow: hidden;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+                background: #0f172a;
+                font-family: "Helvetica Neue", Arial, sans-serif;
+                position: relative;
+            }
 
-        #score {
-            position: absolute;
-            top: 40px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: #fff;
-            font-size: 24px;
-            font-weight: 200;
-            opacity: 0.5;
-            letter-spacing: 2px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            z-index: 3;
-            pointer-events: none;
-            text-align: center;
-        }
+            #gameCanvas {
+                border: 2px solid rgba(255, 255, 255, 0.05);
+                border-radius: 20px;
+                background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+                box-shadow: 0 0 50px rgba(0, 0, 0, 0.2);
+            }
 
-        #score::before {
-            content: 'SCORE';
-            font-size: 14px;
-            letter-spacing: 4px;
-            opacity: 0.3;
-        }
+            #score {
+                position: absolute;
+                top: 40px;
+                left: 50%;
+                transform: translateX(-50%);
+                color: #fff;
+                font-size: 24px;
+                font-weight: 200;
+                opacity: 0.5;
+                letter-spacing: 2px;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                z-index: 3;
+                pointer-events: none;
+                text-align: center;
+            }
 
-        .transition {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #0f172a;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 1s;
-        }
+            #score::before {
+                content: "SCORE";
+                font-size: 14px;
+                letter-spacing: 4px;
+                opacity: 0.3;
+            }
 
-        .transition.active {
-            opacity: 1;
-            pointer-events: auto;
-        }
+            .transition {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: #0f172a;
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 1s;
+            }
 
-        #gameOver {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-            display: none;
-            z-index: 3;
-            width: calc(100% + 20px);
-        }
+            .transition.active {
+                opacity: 1;
+                pointer-events: auto;
+            }
 
-        #gameOver h2 {
-            font-size: 48px;
-            font-weight: 200;
-            color: #fff;
-            opacity: 0.8;
-            margin: 0 0 30px 0;
-            letter-spacing: 8px;
-            text-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
-        }
+            #gameOver {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                text-align: center;
+                display: none;
+                z-index: 3;
+                width: calc(100% + 20px);
+            }
 
-        #restartButton {
-            padding: 15px 40px;
-            font-size: 16px;
-            background: transparent;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 30px;
-            color: rgba(255, 255, 255, 0.8);
-            cursor: pointer;
-            transition: all 0.3s ease;
-            letter-spacing: 4px;
-            font-weight: 200;
-            backdrop-filter: blur(5px);
-            -webkit-backdrop-filter: blur(5px);
-        }
+            #gameOver h2 {
+                font-size: 48px;
+                font-weight: 200;
+                color: #fff;
+                opacity: 0.8;
+                margin: 0 0 30px 0;
+                letter-spacing: 8px;
+                text-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+            }
 
-        #restartButton:hover {
-            background: rgba(255, 255, 255, 0.05);
-            transform: translateY(-2px);
-            border-color: rgba(255, 255, 255, 0.3);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-        }
+            #restartButton {
+                padding: 15px 40px;
+                font-size: 16px;
+                background: transparent;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 30px;
+                color: rgba(255, 255, 255, 0.8);
+                cursor: pointer;
+                transition: all 0.3s ease;
+                letter-spacing: 4px;
+                font-weight: 200;
+                backdrop-filter: blur(5px);
+                -webkit-backdrop-filter: blur(5px);
+            }
 
-        #setupScreen {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            position: absolute;
-            width: 100%;
-            height: 100vh;
-            z-index: 3;
-        }
+            #restartButton:hover {
+                background: rgba(255, 255, 255, 0.05);
+                transform: translateY(-2px);
+                border-color: rgba(255, 255, 255, 0.3);
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            }
 
-        #setupScreen h2 {
-            font-size: 24px;
-            font-weight: 200;
-            letter-spacing: 4px;
-            margin-bottom: 40px;
-            opacity: 0.8;
-            color: #fff;
-        }
+            #setupScreen {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                position: absolute;
+                width: 100%;
+                height: 100vh;
+                z-index: 3;
+            }
 
-        .setup-options {
-            display: flex;
-            gap: 20px;
-            margin-bottom: 40px;
-        }
+            #setupScreen h2 {
+                font-size: 24px;
+                font-weight: 200;
+                letter-spacing: 4px;
+                margin-bottom: 40px;
+                opacity: 0.8;
+                color: #fff;
+            }
 
-        .setup-option {
-            padding: 20px;
-            background: transparent;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            color: rgba(255, 255, 255, 0.8);
-            cursor: pointer;
-            transition: all 0.3s ease;
-            width: 200px;
-            height: 120px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
+            .setup-options {
+                display: flex;
+                gap: 20px;
+                margin-bottom: 40px;
+            }
 
-        .setup-option:hover {
-            background: rgba(255, 255, 255, 0.05);
-            transform: translateY(-2px);
-            border-color: rgba(255, 255, 255, 0.2);
-        }
+            .setup-option {
+                padding: 20px;
+                background: transparent;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 15px;
+                color: rgba(255, 255, 255, 0.8);
+                cursor: pointer;
+                transition: all 0.3s ease;
+                width: 200px;
+                height: 120px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+            }
 
-        .setup-option h3 {
-            font-size: 16px;
-            font-weight: 200;
-            margin: 0 0 15px 0;
-            opacity: 0.5;
-            text-align: center;
-            width: 100%;
-        }
+            .setup-option:hover {
+                background: rgba(255, 255, 255, 0.05);
+                transform: translateY(-2px);
+                border-color: rgba(255, 255, 255, 0.2);
+            }
 
-        #timeInput {
-            background: transparent;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            color: #fff;
-            padding: 10px;
-            width: 80%;
-            text-align: center;
-            margin: 0;
-            font-size: 16px;
-            appearance: none;
-            -moz-appearance: textfield;
-        }
+            .setup-option h3 {
+                font-size: 16px;
+                font-weight: 200;
+                margin: 0 0 15px 0;
+                opacity: 0.5;
+                text-align: center;
+                width: 100%;
+            }
 
-        #timeInput::-webkit-outer-spin-button,
-        #timeInput::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
+            #timeInput {
+                background: transparent;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 8px;
+                color: #fff;
+                padding: 10px;
+                width: 80%;
+                text-align: center;
+                margin: 0;
+                font-size: 16px;
+                appearance: none;
+                -moz-appearance: textfield;
+            }
 
-        #timeInput:focus {
-            outline: none;
-            border-color: rgba(255, 255, 255, 0.3);
-            box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
-        }
+            #timeInput::-webkit-outer-spin-button,
+            #timeInput::-webkit-inner-spin-button {
+                -webkit-appearance: none;
+                margin: 0;
+            }
 
-        #timeInput::placeholder {
-            color: rgba(255, 255, 255, 0.3);
-        }
+            #timeInput:focus {
+                outline: none;
+                border-color: rgba(255, 255, 255, 0.3);
+                box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+            }
 
-        #startGameBtn {
-            margin-top: 20px;
-            padding: 15px 40px;
-            background: transparent;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 30px;
-            color: rgba(255, 255, 255, 0.8);
-            cursor: pointer;
-            transition: all 0.3s ease;
-            letter-spacing: 2px;
-            font-weight: 200;
-        }
+            #timeInput::placeholder {
+                color: rgba(255, 255, 255, 0.3);
+            }
 
-        #startGameBtn:hover {
-            background: rgba(255, 255, 255, 0.05);
-            transform: translateY(-2px);
-            border-color: rgba(255, 255, 255, 0.2);
-        }
+            #seatInput {
+                background: transparent;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 8px;
+                color: #fff;
+                padding: 10px;
+                width: 80%;
+                text-align: center;
+                margin: 0;
+                font-size: 16px;
+                appearance: none;
+                -moz-appearance: textfield;
+            }
 
-        .game-container {
-            display: none;
-            width: 100%;
-            height: 100vh;
-            position: absolute;
-            top: 0;
-            left: 0;
-        }
+            #seatInput::-webkit-outer-spin-button,
+            #seatInput::-webkit-inner-spin-button {
+                -webkit-appearance: none;
+                margin: 0;
+            }
 
-        .game-container.active {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-        }
+            #seatInput:focus {
+                outline: none;
+                border-color: rgba(255, 255, 255, 0.3);
+                box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+            }
 
-        .canvas-container {
-            position: relative;
-            width: 400px;
-            height: 600px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
+            #seatInput::placeholder {
+                color: rgba(255, 255, 255, 0.3);
+            }
 
-        #gameCanvas {
-            position: absolute;
-            z-index: 1;
-            border-radius: 20px;
-        }
+            #startGameBtn {
+                margin-top: 20px;
+                padding: 15px 40px;
+                background: transparent;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 30px;
+                color: rgba(255, 255, 255, 0.8);
+                cursor: pointer;
+                transition: all 0.3s ease;
+                letter-spacing: 2px;
+                font-weight: 200;
+            }
 
-        .overlay {
-            position: absolute;
-            top: -10px;
-            left: -10px;
-            width: calc(100% + 20px);
-            height: calc(100% + 20px);
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(3px);
-            -webkit-backdrop-filter: blur(3px);
-            display: none;
-            z-index: 2;
-            border-radius: 25px;
-            box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);
-        }
+            #startGameBtn:hover {
+                background: rgba(255, 255, 255, 0.05);
+                transform: translateY(-2px);
+                border-color: rgba(255, 255, 255, 0.2);
+            }
 
-        .ready-screen {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-            z-index: 3;
-            display: none;
-        }
+            .game-container {
+                display: none;
+                width: 100%;
+                height: 100vh;
+                position: absolute;
+                top: 0;
+                left: 0;
+            }
 
-        .ready-screen h2 {
-            font-size: 48px;
-            font-weight: 200;
-            color: #fff;
-            opacity: 0.8;
-            margin: 0 0 30px 0;
-            letter-spacing: 8px;
-            text-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
-        }
+            .game-container.active {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                position: relative;
+            }
 
-        .start-button {
-            padding: 15px 40px;
-            font-size: 16px;
-            background: transparent;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 30px;
-            color: rgba(255, 255, 255, 0.8);
-            cursor: pointer;
-            transition: all 0.3s ease;
-            letter-spacing: 4px;
-            font-weight: 200;
-            backdrop-filter: blur(5px);
-            -webkit-backdrop-filter: blur(5px);
-        }
+            .canvas-container {
+                position: relative;
+                width: 400px;
+                height: 600px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
 
-        .start-button:hover {
-            background: rgba(255, 255, 255, 0.05);
-            transform: translateY(-2px);
-            border-color: rgba(255, 255, 255, 0.3);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-        }
-    </style>
-</head>
-<body>
-    <div id="setupScreen">
-        <h2>TRANSITION SETUP</h2>
-        <div class="setup-options">
-            <div class="setup-option" onclick="selectOption('timer')">
-                <h3>TIMER</h3>
-                <input type="number" id="timeInput" placeholder="秒数" min="1">
+            #gameCanvas {
+                position: absolute;
+                z-index: 1;
+                border-radius: 20px;
+            }
+
+            .overlay {
+                position: absolute;
+                top: -10px;
+                left: -10px;
+                width: calc(100% + 20px);
+                height: calc(100% + 20px);
+                background: rgba(0, 0, 0, 0.5);
+                backdrop-filter: blur(3px);
+                -webkit-backdrop-filter: blur(3px);
+                display: none;
+                z-index: 2;
+                border-radius: 25px;
+                box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);
+            }
+
+            .ready-screen {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                text-align: center;
+                z-index: 3;
+                display: none;
+            }
+
+            .ready-screen h2 {
+                font-size: 48px;
+                font-weight: 200;
+                color: #fff;
+                opacity: 0.8;
+                margin: 0 0 30px 0;
+                letter-spacing: 8px;
+                text-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+            }
+
+            .start-button {
+                padding: 15px 40px;
+                font-size: 16px;
+                background: transparent;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 30px;
+                color: rgba(255, 255, 255, 0.8);
+                cursor: pointer;
+                transition: all 0.3s ease;
+                letter-spacing: 4px;
+                font-weight: 200;
+                backdrop-filter: blur(5px);
+                -webkit-backdrop-filter: blur(5px);
+            }
+
+            .start-button:hover {
+                background: rgba(255, 255, 255, 0.05);
+                transform: translateY(-2px);
+                border-color: rgba(255, 255, 255, 0.3);
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            }
+        </style>
+    </head>
+    <body>
+        <div id="setupScreen">
+            <h2>TRANSITION SETUP</h2>
+            <div class="setup-options">
+                <!-- SEAT NUMBERのオプションを追加 -->
+                <div class="setup-option" onclick="selectOption('seat')">
+                    <h3>SEAT NUMBER</h3>
+                    <input
+                        type="number"
+                        id="seatInput"
+                        placeholder="1-10"
+                        min="1"
+                        max="10"
+                    />
+                </div>
+                <div class="setup-option" onclick="selectOption('timer')">
+                    <h3>TIMER</h3>
+                    <input
+                        type="number"
+                        id="timeInput"
+                        placeholder="秒数"
+                        min="1"
+                    />
+                </div>
+                <div class="setup-option" onclick="selectOption('time')">
+                    <h3>SPECIFIC TIME</h3>
+                    <input type="time" id="timeInput" style="display: none" />
+                </div>
             </div>
-            <div class="setup-option" onclick="selectOption('time')">
-                <h3>SPECIFIC TIME</h3>
-                <input type="time" id="timeInput" style="display: none;">
-            </div>
+            <button id="startGameBtn">START GAME</button>
         </div>
-        <button id="startGameBtn">START GAME</button>
-    </div>
 
-    <div class="game-container">
-        <div class="canvas-container">
-            <div id="score">0</div>
-            <div class="overlay"></div>
-            <div id="gameOver">
-                <h2>GAME OVER</h2>
-                <button id="restartButton">RESTART</button>
+        <div class="game-container">
+            <div class="canvas-container">
+                <div id="score">0</div>
+                <div class="overlay"></div>
+                <div id="gameOver">
+                    <h2>GAME OVER</h2>
+                    <button id="restartButton">RESTART</button>
+                </div>
+                <div class="ready-screen">
+                    <h2>READY?</h2>
+                    <button class="start-button">START</button>
+                </div>
+                <canvas id="gameCanvas"></canvas>
             </div>
-            <div class="ready-screen">
-                <h2>READY?</h2>
-                <button class="start-button">START</button>
-            </div>
-            <canvas id="gameCanvas"></canvas>
+            <div class="transition"></div>
         </div>
-        <div class="transition"></div>
-    </div>
 
-    <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        const scoreElement = document.getElementById('score');
-        const gameOverScreen = document.getElementById('gameOver');
-        const restartButton = document.getElementById('restartButton');
-        const transition = document.querySelector('.transition');
+        <script>
+            const canvas = document.getElementById("gameCanvas");
+            const ctx = canvas.getContext("2d");
+            const scoreElement = document.getElementById("score");
+            const gameOverScreen = document.getElementById("gameOver");
+            const restartButton = document.getElementById("restartButton");
+            const transition = document.querySelector(".transition");
 
-        // キャラクター画像の読み込み
-        const birdImage = new Image();
-        birdImage.src = 'Character.png';
+            // キャラクター画像の読み込み
+            const birdImage = new Image();
+            birdImage.src = "character.png";
 
-        canvas.width = 400;
-        canvas.height = 600;
+            canvas.width = 400;
+            canvas.height = 600;
 
-        let score = 0;
-        let gameStartTime = Date.now();
-        let isGameOver = false;
+            let score = 0;
+            let gameStartTime = Date.now();
+            let isGameOver = false;
 
-        // 鳥のサイズを調整
-        const bird = {
-            x: canvas.width / 3,
-            y: canvas.height / 2,
-            width: 40,
-            height: 40,
-            velocity: 0,
-            gravity: 0.4,  // 重力を少し弱く
-            jump: -6.5,    // ジャンプ力を調整
-            rotation: 0,
-            maxRotation: 25,  // 最大回転角度
-            minRotation: -25, // 最小回転角度
-            rotationSpeed: 3  // 回転速度
-        };
+            // 鳥のサイズを調整
+            const bird = {
+                x: canvas.width / 3,
+                y: canvas.height / 2,
+                width: 40,
+                height: 40,
+                velocity: 0,
+                gravity: 0.4, // 重力を少し弱く
+                jump: -6.5, // ジャンプ力を調整
+                rotation: 0,
+                maxRotation: 25, // 最大回転角度
+                minRotation: -25, // 最小回転角度
+                rotationSpeed: 3, // 回転速度
+            };
 
-        // パイプ
-        const pipes = [];
-        const pipeWidth = 60;
-        const pipeGap = 160;
-        const pipeSpeed = 2;
+            // パイプ
+            const pipes = [];
+            const pipeWidth = 60;
+            const pipeGap = 160;
+            const pipeSpeed = 2;
 
-        function createPipe() {
-            const minHeight = 100;
-            const maxHeight = canvas.height - pipeGap - minHeight;
-            const height = Math.random() * (maxHeight - minHeight) + minHeight;
+            function createPipe() {
+                const minHeight = 100;
+                const maxHeight = canvas.height - pipeGap - minHeight;
+                const height =
+                    Math.random() * (maxHeight - minHeight) + minHeight;
 
-            pipes.push({
-                x: canvas.width,
-                height: height,
-                passed: false
-            });
-        }
+                pipes.push({
+                    x: canvas.width,
+                    height: height,
+                    passed: false,
+                });
+            }
 
-        function resetGame() {
-            score = 0;
-            gameStartTime = Date.now();
-            isGameOver = false;
-            bird.y = canvas.height / 2;
-            bird.velocity = 0;
-            bird.rotation = 0;
-            pipes.length = 0;
+            function resetGame() {
+                score = 0;
+                gameStartTime = Date.now();
+                isGameOver = false;
+                bird.y = canvas.height / 2;
+                bird.velocity = 0;
+                bird.rotation = 0;
+                pipes.length = 0;
+                createPipe();
+                gameOverScreen.style.display = "none";
+                document.querySelector(".overlay").style.display = "none";
+                scoreElement.textContent = "0";
+            }
+
+            // 最初のパイプを生成
             createPipe();
-            gameOverScreen.style.display = 'none';
-            document.querySelector('.overlay').style.display = 'none';
-            scoreElement.textContent = '0';
-        }
 
-        // 最初のパイプを生成
-        createPipe();
-
-        // キー入力の設定
-        document.addEventListener('keydown', (e) => {
-            if (e.code === 'Space' && !isGameOver) {
-                bird.velocity = bird.jump;
-                bird.rotation = bird.minRotation;  // ジャンプ時の角度
-            }
-        });
-
-        // タッチ入力の設定
-        document.addEventListener('touchstart', (e) => {
-            if (!isGameOver) {
-                e.preventDefault();
-                bird.velocity = bird.jump;
-                bird.rotation = bird.minRotation;  // ジャンプ時の角度
-            }
-        });
-
-        restartButton.addEventListener('click', resetGame);
-
-        // 鳥の回転角度を計算する関数
-        function calculateRotation() {
-            if (bird.velocity < 0) {
-                // 上昇中は最小角度（上向き）
-                return bird.minRotation;
-            } else {
-                // 下降中は速度に応じて角度を変える
-                const rotationRate = Math.min(bird.velocity / 10, 1);
-                return bird.minRotation + (bird.maxRotation - bird.minRotation) * rotationRate;
-            }
-        }
-
-        // 鳥の描画関数を修正
-        function drawBird() {
-            ctx.save();
-            ctx.translate(bird.x, bird.y);
-            
-            // 現在の回転角度を計算
-            bird.rotation = calculateRotation();
-            ctx.rotate(bird.rotation * Math.PI / 180);
-            
-            const offsetX = bird.width / 2;
-            const offsetY = bird.height / 2;
-            
-            ctx.drawImage(
-                birdImage,
-                -offsetX,
-                -offsetY,
-                bird.width,
-                bird.height
-            );
-            
-            ctx.restore();
-        }
-
-        // パイプの描画
-        function drawPipes() {
-            pipes.forEach(pipe => {
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
-                
-                // 上のパイプ
-                ctx.fillRect(pipe.x, 0, pipeWidth, pipe.height);
-                
-                // 下のパイプ
-                ctx.fillRect(pipe.x, pipe.height + pipeGap, pipeWidth, 
-                    canvas.height - (pipe.height + pipeGap));
-                
-                // パイプの縁
-                ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-                ctx.lineWidth = 2;
-                ctx.strokeRect(pipe.x, 0, pipeWidth, pipe.height);
-                ctx.strokeRect(pipe.x, pipe.height + pipeGap, pipeWidth,
-                    canvas.height - (pipe.height + pipeGap));
+            // キー入力の設定
+            document.addEventListener("keydown", (e) => {
+                if (e.code === "Space" && !isGameOver) {
+                    bird.velocity = bird.jump;
+                    bird.rotation = bird.minRotation; // ジャンプ時の角度
+                }
             });
-        }
 
-        // 背景の描画
-        function drawBackground() {
-            // グラデーションの光の粒子
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
-            for(let i = 0; i < 20; i++) {
-                const size = Math.random() * 3;
-                const x = Math.random() * canvas.width;
-                const y = Math.random() * canvas.height;
-                
-                ctx.beginPath();
-                ctx.arc(x, y, size, 0, Math.PI * 2);
-                ctx.fill();
-            }
-        }
+            // タッチ入力の設定
+            document.addEventListener("touchstart", (e) => {
+                if (!isGameOver) {
+                    e.preventDefault();
+                    bird.velocity = bird.jump;
+                    bird.rotation = bird.minRotation; // ジャンプ時の角度
+                }
+            });
 
-        // 衝突判定
-        function checkCollision(pipe) {
-            if (bird.x + bird.width/2 > pipe.x && 
-                bird.x - bird.width/2 < pipe.x + pipeWidth) {
-                if (bird.y - bird.width/2 < pipe.height || 
-                    bird.y + bird.width/2 > pipe.height + pipeGap) {
-                    return true;
+            restartButton.addEventListener("click", resetGame);
+
+            // 鳥の回転角度を計算する関数
+            function calculateRotation() {
+                if (bird.velocity < 0) {
+                    // 上昇中は最小角度（上向き）
+                    return bird.minRotation;
+                } else {
+                    // 下降中は速度に応じて角度を変える
+                    const rotationRate = Math.min(bird.velocity / 10, 1);
+                    return (
+                        bird.minRotation +
+                        (bird.maxRotation - bird.minRotation) * rotationRate
+                    );
                 }
             }
-            return false;
-        }
 
-        // 新しく追加するコード
-        let transitionType = 'timer';
-        let transitionValue = null;
-        
-        function selectOption(type) {
-            transitionType = type;
-            const timerInput = document.querySelector('#timeInput');
-            const timeInput = document.querySelector('#timeInput[type="time"]');
-            
-            if (type === 'timer') {
-                timerInput.style.display = 'block';
-                timeInput.style.display = 'none';
-            } else {
-                timerInput.style.display = 'none';
-                timeInput.style.display = 'block';
-            }
-        }
+            // 鳥の描画関数を修正
+            function drawBird() {
+                ctx.save();
+                ctx.translate(bird.x, bird.y);
 
-        document.getElementById('startGameBtn').addEventListener('click', () => {
-            const input = transitionType === 'timer' ? 
-                document.querySelector('#timeInput[type="number"]') : 
-                document.querySelector('#timeInput[type="time"]');
+                // 現在の回転角度を計算
+                bird.rotation = calculateRotation();
+                ctx.rotate((bird.rotation * Math.PI) / 180);
 
-            if (!input.value) {
-                alert('時間を設定してください');
-                return;
+                const offsetX = bird.width / 2;
+                const offsetY = bird.height / 2;
+
+                ctx.drawImage(
+                    birdImage,
+                    -offsetX,
+                    -offsetY,
+                    bird.width,
+                    bird.height,
+                );
+
+                ctx.restore();
             }
 
-            if (transitionType === 'timer') {
-                transitionValue = parseInt(input.value) * 1000;
-            } else {
-                const [hours, minutes] = input.value.split(':');
-                const targetTime = new Date();
-                targetTime.setHours(parseInt(hours));
-                targetTime.setMinutes(parseInt(minutes));
-                targetTime.setSeconds(0);
-                
-                if (targetTime < new Date()) {
-                    targetTime.setDate(targetTime.getDate() + 1);
+            // パイプの描画
+            function drawPipes() {
+                pipes.forEach((pipe) => {
+                    ctx.fillStyle = "rgba(255, 255, 255, 0.03)";
+
+                    // 上のパイプ
+                    ctx.fillRect(pipe.x, 0, pipeWidth, pipe.height);
+
+                    // 下のパイプ
+                    ctx.fillRect(
+                        pipe.x,
+                        pipe.height + pipeGap,
+                        pipeWidth,
+                        canvas.height - (pipe.height + pipeGap),
+                    );
+
+                    // パイプの縁
+                    ctx.strokeStyle = "rgba(255, 255, 255, 0.1)";
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(pipe.x, 0, pipeWidth, pipe.height);
+                    ctx.strokeRect(
+                        pipe.x,
+                        pipe.height + pipeGap,
+                        pipeWidth,
+                        canvas.height - (pipe.height + pipeGap),
+                    );
+                });
+            }
+
+            // 背景の描画
+            function drawBackground() {
+                // グラデーションの光の粒子
+                ctx.fillStyle = "rgba(255, 255, 255, 0.1)";
+                for (let i = 0; i < 20; i++) {
+                    const size = Math.random() * 3;
+                    const x = Math.random() * canvas.width;
+                    const y = Math.random() * canvas.height;
+
+                    ctx.beginPath();
+                    ctx.arc(x, y, size, 0, Math.PI * 2);
+                    ctx.fill();
                 }
-                
-                transitionValue = targetTime.getTime();
             }
 
-            document.getElementById('setupScreen').style.display = 'none';
-            const gameContainer = document.querySelector('.game-container');
-            gameContainer.classList.add('active');
-            document.querySelector('.ready-screen').style.display = 'block';
-        });
-
-        document.querySelector('.start-button').addEventListener('click', () => {
-            document.querySelector('.ready-screen').style.display = 'none';
-            gameStartTime = Date.now();
-            gameLoop();
-        });
-
-        // ゲームループ内の遷移チェックを修正
-        function checkTransition() {
-            if ((transitionType === 'timer' && Date.now() - gameStartTime > transitionValue) ||
-                (transitionType === 'time' && Date.now() >= transitionValue)) {
-                transition.classList.add('active');
-                setTimeout(() => {
-                    window.location.href = 'welcome.html';
-                }, 1000);
-                return true;
-            }
-            return false;
-        }
-
-        // ゲームループ
-        function gameLoop() {
-            if (checkTransition()) {
-                transition.classList.add('active');
-                setTimeout(() => {
-                    window.location.href = 'welcome.html';
-                }, 1000);
-                return;
-            }
-
-            // 画面クリア
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawBackground();
-
-            if (!isGameOver) {
-                // 鳥の更新
-                bird.velocity += bird.gravity;
-                bird.y += bird.velocity;
-
-                // 速度の制限（落下速度の上限を設定）
-                if (bird.velocity > 15) {
-                    bird.velocity = 15;
+            // 衝突判定
+            function checkCollision(pipe) {
+                if (
+                    bird.x + bird.width / 2 > pipe.x &&
+                    bird.x - bird.width / 2 < pipe.x + pipeWidth
+                ) {
+                    if (
+                        bird.y - bird.width / 2 < pipe.height ||
+                        bird.y + bird.width / 2 > pipe.height + pipeGap
+                    ) {
+                        return true;
+                    }
                 }
+                return false;
+            }
 
-                // パイプの更新
-                if (pipes[pipes.length - 1].x < canvas.width - 200) {
-                    createPipe();
+            // 新しく追加するコード
+            let transitionType = "timer";
+            let transitionValue = null;
+
+            function selectOption(type) {
+                // transitionTypeは'timer'または'time'の場合のみ更新
+                if (type === "timer" || type === "time") {
+                    transitionType = type;
+                    const timerInput = document.querySelector(
+                        '#timeInput[type="number"]',
+                    );
+                    const timeInput = document.querySelector(
+                        '#timeInput[type="time"]',
+                    );
+
+                    if (type === "timer") {
+                        timerInput.style.display = "block";
+                        timeInput.style.display = "none";
+                    } else {
+                        timerInput.style.display = "none";
+                        timeInput.style.display = "block";
+                    }
                 }
+                // seat numberの選択時は何もしない
+            }
 
-                pipes.forEach((pipe, index) => {
-                    pipe.x -= pipeSpeed;
+            document
+                .getElementById("startGameBtn")
+                .addEventListener("click", () => {
+                    const seatInput = document.querySelector("#seatInput");
+                    const timeInput =
+                        transitionType === "timer"
+                            ? document.querySelector(
+                                  '#timeInput[type="number"]',
+                              )
+                            : document.querySelector('#timeInput[type="time"]');
 
-                    // スコア加算
-                    if (!pipe.passed && bird.x > pipe.x + pipeWidth) {
-                        score += 1;
-                        scoreElement.textContent = score.toString().padStart(2, '0');
-                        pipe.passed = true;
+                    // 座席番号のバリデーション
+                    if (
+                        !seatInput.value ||
+                        seatInput.value < 1 ||
+                        seatInput.value > 10
+                    ) {
+                        alert("座席番号を1-10の間で入力してください");
+                        return;
                     }
 
-                    // 衝突判定
-                    if (checkCollision(pipe)) {
-                        isGameOver = true;
-                        gameOverScreen.style.display = 'block';
-                        document.querySelector('.overlay').style.display = 'block';
+                    // 時間のバリデーション
+                    if (!timeInput.value) {
+                        alert("時間を設定してください");
+                        return;
                     }
 
-                    // 画面外のパイプを削除
-                    if (pipe.x + pipeWidth < 0) {
-                        pipes.splice(index, 1);
+                    // 座席番号をSessionStorageに保存
+                    sessionStorage.setItem("seatNumber", seatInput.value);
+
+                    if (transitionType === "timer") {
+                        transitionValue = parseInt(timeInput.value) * 1000;
+                    } else {
+                        const [hours, minutes] = timeInput.value.split(":");
+                        const targetTime = new Date();
+                        targetTime.setHours(parseInt(hours));
+                        targetTime.setMinutes(parseInt(minutes));
+                        targetTime.setSeconds(0);
+
+                        if (targetTime < new Date()) {
+                            targetTime.setDate(targetTime.getDate() + 1);
+                        }
+
+                        transitionValue = targetTime.getTime();
                     }
+
+                    document.getElementById("setupScreen").style.display =
+                        "none";
+                    const gameContainer =
+                        document.querySelector(".game-container");
+                    gameContainer.classList.add("active");
+                    document.querySelector(".ready-screen").style.display =
+                        "block";
                 });
 
-                // 画面外に出ないように制限
-                if (bird.y < 0) {
-                    bird.y = 0;
-                    bird.velocity = 0;
+            document
+                .querySelector(".start-button")
+                .addEventListener("click", () => {
+                    document.querySelector(".ready-screen").style.display =
+                        "none";
+                    gameStartTime = Date.now();
+                    gameLoop();
+                });
+
+            // ゲームループ内の遷移チェックを修正
+            function checkTransition() {
+                if (
+                    (transitionType === "timer" &&
+                        Date.now() - gameStartTime > transitionValue) ||
+                    (transitionType === "time" && Date.now() >= transitionValue)
+                ) {
+                    transition.classList.add("active");
+                    setTimeout(() => {
+                        window.location.href = "welcome.html";
+                    }, 1000);
+                    return true;
                 }
-                if (bird.y > canvas.height) {
-                    isGameOver = true;
-                    gameOverScreen.style.display = 'block';
-                    document.querySelector('.overlay').style.display = 'block';
-                }
+                return false;
             }
 
-            // 描画
-            drawPipes();
-            drawBird();
+            // ゲームループ
+            function gameLoop() {
+                if (checkTransition()) {
+                    transition.classList.add("active");
+                    setTimeout(() => {
+                        window.location.href = "welcome.html";
+                    }, 1000);
+                    return;
+                }
 
-            requestAnimationFrame(gameLoop);
-        }
-    </script>
-</body>
-</html> 
+                // 画面クリア
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                drawBackground();
+
+                if (!isGameOver) {
+                    // 鳥の更新
+                    bird.velocity += bird.gravity;
+                    bird.y += bird.velocity;
+
+                    // 速度の制限（落下速度の上限を設定）
+                    if (bird.velocity > 15) {
+                        bird.velocity = 15;
+                    }
+
+                    // パイプの更新
+                    if (pipes[pipes.length - 1].x < canvas.width - 200) {
+                        createPipe();
+                    }
+
+                    pipes.forEach((pipe, index) => {
+                        pipe.x -= pipeSpeed;
+
+                        // スコア加算
+                        if (!pipe.passed && bird.x > pipe.x + pipeWidth) {
+                            score += 1;
+                            scoreElement.textContent = score
+                                .toString()
+                                .padStart(2, "0");
+                            pipe.passed = true;
+                        }
+
+                        // 衝突判定
+                        if (checkCollision(pipe)) {
+                            isGameOver = true;
+                            gameOverScreen.style.display = "block";
+                            document.querySelector(".overlay").style.display =
+                                "block";
+                        }
+
+                        // 画面外のパイプを削除
+                        if (pipe.x + pipeWidth < 0) {
+                            pipes.splice(index, 1);
+                        }
+                    });
+
+                    // 画面外に出ないように制限
+                    if (bird.y < 0) {
+                        bird.y = 0;
+                        bird.velocity = 0;
+                    }
+                    if (bird.y > canvas.height) {
+                        isGameOver = true;
+                        gameOverScreen.style.display = "block";
+                        document.querySelector(".overlay").style.display =
+                            "block";
+                    }
+                }
+
+                // 描画
+                drawPipes();
+                drawBird();
+
+                requestAnimationFrame(gameLoop);
+            }
+        </script>
+    </body>
+</html>
